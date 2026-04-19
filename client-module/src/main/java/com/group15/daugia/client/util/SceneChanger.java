@@ -10,10 +10,8 @@ import java.io.IOException;
 public class SceneChanger {
   private static Stage mainStage;
 
-  public static void setMainStage() {
-    if (mainStage == null) {
-      mainStage = new Stage();
-    }
+  public static void setMainStage(Stage stage) {
+    mainStage = stage;
   }
 
   public static <T> T changeTo(String fxmlPath) {

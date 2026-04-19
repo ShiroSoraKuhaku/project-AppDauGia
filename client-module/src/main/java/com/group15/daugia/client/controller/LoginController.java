@@ -35,16 +35,18 @@ public class LoginController implements Initializable {
           Gson gson = new Gson();
           String userData = gson.toJson(userTemp);
 
-          String[] answer = LoginNetwork.loginReq(userData).split("\\|");
-          if (answer[0].equals("GOOD")) {
-            Menu_BidderController nextController = SceneChanger.changeTo("/menu_bidder.fxml");
-            User.setUsername(username);
-          } else {
+          String answer = LoginNetwork.loginReq("LOGIN", userData);
+          JSONUserTemplate token = gson.fromJson(answer, JSONUserTemplate.class);
+          if (token.getToken() != null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Error");
             alert.setHeaderText("Cannot Login");
             alert.setContentText("Username or Password is wrong");
             alert.showAndWait();
+          } else {
+            Menu_BidderController nextController = SceneChanger.changeTo("/menu_bidder.fxml");
+            User.setUsername(username);
+            User.setToken(token.getToken());
           }
         });
   }

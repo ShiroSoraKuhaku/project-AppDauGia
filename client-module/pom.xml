@@ -51,6 +51,15 @@
                     <target>25</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.group15.daugia.client.Laucher</mainClass>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
