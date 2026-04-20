@@ -12,7 +12,7 @@ public class DBProperty {
   private DBProperty() {
     host = System.getenv().getOrDefault("DB_HOST", "localhost");
     port = System.getenv().getOrDefault("DB_PORT", "3306");
-    dbName = System.getenv().getOrDefault("DB_NAME", "DauGiaDB");
+    dbName = System.getenv().getOrDefault("DB_NAME", "daugiadb");
     username = System.getenv().getOrDefault("DB_USERNAME", "root");
     password = System.getenv().getOrDefault("DB_PASSWORD", "root");
   }

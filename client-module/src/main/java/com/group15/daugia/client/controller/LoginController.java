@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import com.google.gson.Gson;
 import com.group15.daugia.shared.JSONUserTemplate;
+import javafx.scene.control.TextField;
 
 public class LoginController implements Initializable {
   @FXML private Button ok;
@@ -37,14 +39,15 @@ public class LoginController implements Initializable {
 
           String answer = LoginNetwork.loginReq("LOGIN", userData);
           JSONUserTemplate token = gson.fromJson(answer, JSONUserTemplate.class);
-          if (token.getToken() != null) {
+          if (token.getToken() == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Error");
             alert.setHeaderText("Cannot Login");
             alert.setContentText("Username or Password is wrong");
             alert.showAndWait();
           } else {
-            Menu_BidderController nextController = SceneChanger.changeTo("/menu_bidder.fxml");
+            Menu_BidderController nextController =
+                SceneChanger.changeTo("com.group15.daugia.clientResources/menu_bidder.fxml");
             User.setUsername(username);
             User.setToken(token.getToken());
           }

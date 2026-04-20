@@ -12,7 +12,7 @@ public class UserDAO {
   public String checkLogin(String username, String password) {
     DBProperty dbProperty = DBProperty.getInstance();
     String sqlCheckCommand = "select id from user where username = ? and password = ?";
-    String sqlSetTokenCommand = "insert into token (id, token) values (?, ?)";
+    String sqlSetTokenCommand = "insert into tokens (id, token) values (?, ?)";
 
     try (Connection conn =
         DriverManager.getConnection(

@@ -12,7 +12,7 @@ public class LoginNetwork {
   // Req login từ server
   public static String loginReq(String request, String jsonData) {
     try (Socket socket = new Socket("localhost", 8080);
-        PrintWriter out = new PrintWriter(socket.getOutputStream());
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); ) {
       out.println(request);
       out.println(jsonData);

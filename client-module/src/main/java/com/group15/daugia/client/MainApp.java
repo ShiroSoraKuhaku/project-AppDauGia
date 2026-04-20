@@ -10,5 +10,6 @@ public class MainApp extends Application {
   public void start(Stage mainStage) throws Exception {
     mainStage.setTitle("App");
     SceneChanger.setMainStage(mainStage);
+    SceneChanger.changeTo("com.group15.daugia.clientResources/login.fxml");
   }
 }

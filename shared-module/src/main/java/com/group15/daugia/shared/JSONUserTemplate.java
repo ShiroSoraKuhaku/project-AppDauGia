@@ -3,10 +3,10 @@ package com.group15.daugia.shared; // File template json cho data user
 public class JSONUserTemplate {
   private String password;
   private String username;
-  private int id;
+  private String id;
   private String token;
 
-  public JSONUserTemplate(String password, String username) {
+  public JSONUserTemplate(String username, String password) {
     this.password = password;
     this.username = username;
   }
