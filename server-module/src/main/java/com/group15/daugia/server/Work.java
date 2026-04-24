@@ -8,6 +8,7 @@ public class Work {
 
   static {
     works.put("LOGIN", new LoginWorker());
+    works.put("RM-TOKEN", new LogoutWorker());
   }
 
   public static Map<String, Workable> getWorks() {

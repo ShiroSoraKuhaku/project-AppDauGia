@@ -12,12 +12,16 @@ public class LoginWorker implements Workable {
     Gson gson = new Gson();
     JSONUserTemplate userTemplate = gson.fromJson(data, JSONUserTemplate.class);
     String[] userData = userTemplate.getLoginData();
-    UserDAO checkAcc = new UserDAO();
-    String token = checkAcc.checkLogin(userData[0], userData[1]);
+    UserDAO checkAcc = UserDAO.getUserDao();
+
+    String[] token = checkAcc.checkLogin(userData[0], userData[1]);
     if (token == null) {
       answer = gson.toJson(new JSONUserTemplate());
     } else {
-      answer = gson.toJson(new JSONUserTemplate(token));
+      JSONUserTemplate loggedUser = new JSONUserTemplate();
+      loggedUser.setToken(token[1]);
+      loggedUser.setId(token[0]);
+      answer = gson.toJson(loggedUser);
     }
     return answer;
   }

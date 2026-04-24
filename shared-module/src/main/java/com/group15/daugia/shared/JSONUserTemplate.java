@@ -6,22 +6,35 @@ public class JSONUserTemplate {
   private String id;
   private String token;
 
-  public JSONUserTemplate(String username, String password) {
-    this.password = password;
+  public void setUsername(String username) {
     this.username = username;
   }
 
-  public JSONUserTemplate(String token) {
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public void setToken(String token) {
     this.token = token;
   }
 
-  public JSONUserTemplate() {}
+  public void setId(String id) {
+    this.id = id;
+  }
 
   public String[] getLoginData() {
     return new String[] {username, password};
   }
 
+  public String[] getAfterLoginData() {
+    return new String[] {id, token};
+  }
+
   public String getToken() {
     return token;
+  }
+
+  public String getId() {
+    return id;
   }
 }

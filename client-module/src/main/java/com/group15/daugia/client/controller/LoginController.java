@@ -1,8 +1,9 @@
 package com.group15.daugia.client.controller;
 
+import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.client.model.User;
-import com.group15.daugia.client.network.LoginNetwork;
+import com.group15.daugia.client.network.ShortConnectNetwork;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -10,7 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 
-import java.awt.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 import com.google.gson.Gson;
@@ -22,24 +22,28 @@ public class LoginController implements Initializable {
 
   @FXML private Label signup;
 
-  @FXML private TextField username_textbox;
+  @FXML private TextField username_in;
 
-  @FXML private PasswordField password_passwordbox;
+  @FXML private PasswordField password_in;
 
   @Override
   public void initialize(URL url, ResourceBundle resourceBundle) {
     ok.setOnAction(
         actionEvent -> {
-          String username = username_textbox.getText();
-          String password = password_passwordbox.getText();
+          String username = username_in.getText();
+          String password = password_in.getText();
 
-          JSONUserTemplate userTemp = new JSONUserTemplate(username, password);
+          JSONUserTemplate userTemp = new JSONUserTemplate();
+          userTemp.setUsername(username);
+          userTemp.setPassword(password);
+
           Gson gson = new Gson();
           String userData = gson.toJson(userTemp);
 
-          String answer = LoginNetwork.loginReq("LOGIN", userData);
-          JSONUserTemplate token = gson.fromJson(answer, JSONUserTemplate.class);
-          if (token.getToken() == null) {
+          String answer = ShortConnectNetwork.shortReq("LOGIN", userData);
+          System.out.println(answer);
+          JSONUserTemplate afterLoginData = gson.fromJson(answer, JSONUserTemplate.class);
+          if (afterLoginData.getToken() == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Error");
             alert.setHeaderText("Cannot Login");
@@ -49,7 +53,10 @@ public class LoginController implements Initializable {
             Menu_BidderController nextController =
                 SceneChanger.changeTo("com.group15.daugia.clientResources/menu_bidder.fxml");
             User.setUsername(username);
-            User.setToken(token.getToken());
+            User.setId(afterLoginData.getId());
+            SessionManager.setToken(afterLoginData.getToken());
+            System.out.println(SessionManager.getToken());
+            System.out.println(User.getId());
           }
         });
   }
