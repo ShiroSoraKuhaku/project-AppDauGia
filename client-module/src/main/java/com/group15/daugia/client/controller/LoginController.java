@@ -28,6 +28,7 @@ public class LoginController implements Initializable {
 
   @Override
   public void initialize(URL url, ResourceBundle resourceBundle) {
+    // Đăng nhập
     ok.setOnAction(
         actionEvent -> {
           String username = username_in.getText();
@@ -50,14 +51,16 @@ public class LoginController implements Initializable {
             alert.setContentText("Username or Password is wrong");
             alert.showAndWait();
           } else {
-            Menu_BidderController nextController =
+            MenuBidderController nextController =
                 SceneChanger.changeTo("com.group15.daugia.clientResources/menu_bidder.fxml");
             User.setUsername(username);
-            User.setId(afterLoginData.getId());
             SessionManager.setToken(afterLoginData.getToken());
             System.out.println(SessionManager.getToken());
-            System.out.println(User.getId());
           }
+        });
+    signup.setOnMouseClicked(
+        mouseEvent -> {
+          SceneChanger.changeTo("com.group15.daugia.clientResources/signin.fxml");
         });
   }
 }

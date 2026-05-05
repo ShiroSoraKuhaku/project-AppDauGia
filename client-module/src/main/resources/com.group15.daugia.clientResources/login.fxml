@@ -5,8 +5,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
-            prefWidth="600.0" style="-fx-background-color: #9FFF7A;" xmlns="http://javafx.com/javafx/17.0.12"
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="405.0"
+            prefWidth="603.0" style="-fx-background-color: #9FFF7A;" xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group15.daugia.client.controller.LoginController">
     <children>
         <Label alignment="CENTER" layoutX="123.0" layoutY="6.0" prefHeight="70.0" prefWidth="355.0" text="Log In"
@@ -15,7 +15,7 @@
                 <Font size="28.0"/>
             </font>
         </Label>
-        <AnchorPane layoutY="85.0" prefHeight="315.0" prefWidth="600.0" style="-fx-background-color: #DFFFCC;">
+        <AnchorPane layoutY="85.0" prefHeight="319.0" prefWidth="603.0" style="-fx-background-color: #DFFFCC;">
             <children>
                 <Label alignment="CENTER" layoutX="265.0" layoutY="267.0" prefHeight="17.0" prefWidth="70.0"
                        text="No account?"/>

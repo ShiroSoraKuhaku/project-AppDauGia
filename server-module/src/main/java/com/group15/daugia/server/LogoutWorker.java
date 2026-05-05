@@ -13,7 +13,6 @@ public class LogoutWorker implements Workable {
 
     JSONUserTemplate userTemp = gson.fromJson(data, JSONUserTemplate.class);
     String[] userData = userTemp.getAfterLoginData();
-    String answer = checkAcc.removeLogin(userData[0], userData[1]);
-    return answer;
+    return checkAcc.removeLogin(userData[0], userData[1]);
   }
 }

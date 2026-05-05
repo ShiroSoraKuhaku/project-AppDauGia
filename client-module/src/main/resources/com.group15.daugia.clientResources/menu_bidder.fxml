@@ -3,11 +3,19 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.group15.daugia.client.controller.Menu_BidderController">
-    <children>
-        <Label layoutX="253.0" layoutY="168.0" text="LOL will add soon"/>
-    </children>
-</AnchorPane>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+            prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.group15.daugia.client.controller.MenuBidderController">
+    <center>
+        <TableView fx:id="table" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <columns>
+                <TableColumn fx:id="table_name" prefWidth="75.0" text="Name"/>
+                <TableColumn fx:id="table_price" prefWidth="75.0" text="Price"/>
+                <TableColumn fx:id="table_description" prefWidth="75.0" text="Description"/>
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+        </TableView>
+    </center>
+</BorderPane>

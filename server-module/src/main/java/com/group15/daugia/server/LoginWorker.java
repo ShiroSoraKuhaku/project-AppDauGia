@@ -20,7 +20,7 @@ public class LoginWorker implements Workable {
     } else {
       JSONUserTemplate loggedUser = new JSONUserTemplate();
       loggedUser.setToken(token[1]);
-      loggedUser.setId(token[0]);
+      loggedUser.setUsername(token[0]);
       answer = gson.toJson(loggedUser);
     }
     return answer;
