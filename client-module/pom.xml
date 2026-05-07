@@ -59,7 +59,6 @@
                     <mainClass>com.group15.daugia.client.Launcher</mainClass>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>
