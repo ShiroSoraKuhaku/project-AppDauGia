@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="550.0" prefWidth="650.0" styleClass="main-root" stylesheets="@style.css"
+            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.group15.daugia.client.controller.SignUpController">
+    <VBox alignment="CENTER" layoutX="150.0" layoutY="40.0" spacing="20.0" styleClass="card"
+          AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0"
+          AnchorPane.topAnchor="40.0">
+        <Label styleClass="title-label" text="Tạo Tài Khoản"/>
+
+        <VBox spacing="5.0">
+            <Label styleClass="input-label" text="Tên đăng nhập"/>
+            <TextField fx:id="username_in" promptText="Chọn tên đăng nhập"/>
+        </VBox>
+
+        <VBox spacing="5.0">
+            <Label styleClass="input-label" text="Mật khẩu"/>
+            <PasswordField fx:id="password_in" promptText="Chọn mật khẩu"/>
+        </VBox>
+
+        <VBox spacing="5.0">
+            <Label styleClass="input-label" text="Vai trò"/>
+            <ChoiceBox fx:id="signup_role" maxWidth="Infinity"/>
+        </VBox>
+
+        <Button fx:id="ok" maxWidth="Infinity" mnemonicParsing="false" text="Đăng ký"/>
+
+        <HBox alignment="CENTER" spacing="5.0">
+            <Label styleClass="secondary-text" text="Đã có tài khoản?"/>
+            <Label fx:id="login" styleClass="link-label" text="Đăng nhập"/>
+        </HBox>
+    </VBox>
+</AnchorPane>

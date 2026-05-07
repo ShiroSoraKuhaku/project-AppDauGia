@@ -1,0 +1,39 @@
+﻿services:
+  db:
+    image: mysql:8.0
+    container_name: daugia-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: daugiadb
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"  # Đổi từ 3306 thành 3307 để tránh xung đột
+    volumes:
+      - ./mysql-db:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: daugia-server
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306 # Trong mạng nội bộ Docker vẫn dùng 3306
+      - DB_NAME=daugiadb
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
