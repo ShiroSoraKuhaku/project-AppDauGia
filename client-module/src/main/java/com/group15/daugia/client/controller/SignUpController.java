@@ -6,6 +6,7 @@ import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.shared.JSONUserTemplate;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.PasswordField;
 import javafx.fxml.Initializable;
 
 import java.net.URL;
@@ -14,7 +15,7 @@ import java.util.ResourceBundle;
 public class SignUpController implements Initializable {
   @FXML private TextField username_in;
 
-  @FXML private TextField password_in;
+  @FXML private PasswordField password_in;
 
   @FXML private ChoiceBox<String> signup_role;
 
@@ -59,3 +60,4 @@ public class SignUpController implements Initializable {
         });
   }
 }
+

@@ -1,0 +1,78 @@
+﻿/* Giao diện chính */
+.main-root {
+    -fx-background-color: #f4f7f6;
+}
+
+/* Khung chứa trung tâm (Card) */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+    -fx-padding: 30;
+}
+
+/* Tiêu đề */
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+/* Các ô nhập liệu */
+.text-field, .password-field, .choice-box {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dddddd;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 8 12;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .password-field:focused, .choice-box:focused {
+    -fx-border-color: #4CAF50;
+    -fx-border-width: 1.5;
+}
+
+/* Nhãn hướng dẫn cho ô nhập liệu */
+.input-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #666666;
+    -fx-font-weight: bold;
+}
+
+/* Nút bấm chính */
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #45a049;
+}
+
+.button:pressed {
+    -fx-background-color: #3e8e41;
+}
+
+/* Các liên kết chuyển đổi (Đăng ký / Đăng nhập) */
+.link-label {
+    -fx-text-fill: #2196F3;
+    -fx-cursor: hand;
+}
+
+.link-label:hover {
+    -fx-underline: true;
+    -fx-text-fill: #1976D2;
+}
+
+/* Văn bản phụ */
+.secondary-text {
+    -fx-text-fill: #888888;
+    -fx-font-size: 12px;
+}
