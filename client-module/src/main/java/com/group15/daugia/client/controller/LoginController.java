@@ -14,7 +14,7 @@ import javafx.scene.control.PasswordField;
 import java.net.URL;
 import java.util.ResourceBundle;
 import com.google.gson.Gson;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 import javafx.scene.control.TextField;
 
 public class LoginController implements Initializable {
@@ -34,7 +34,7 @@ public class LoginController implements Initializable {
           String username = username_in.getText();
           String password = password_in.getText();
 
-          JSONUserTemplate userTemp = new JSONUserTemplate();
+          JSONUserTemp userTemp = new JSONUserTemp();
           userTemp.setUsername(username);
           userTemp.setPassword(password);
 
@@ -43,7 +43,7 @@ public class LoginController implements Initializable {
 
           String answer = ShortConnectNetwork.shortReq("LOGIN", userData);
           System.out.println(answer);
-          JSONUserTemplate afterLoginData = gson.fromJson(answer, JSONUserTemplate.class);
+          JSONUserTemp afterLoginData = gson.fromJson(answer, JSONUserTemp.class);
           if (afterLoginData.getToken() == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Error");

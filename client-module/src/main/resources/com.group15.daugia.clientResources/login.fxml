@@ -3,35 +3,29 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="450.0" prefWidth="650.0" styleClass="main-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group15.daugia.client.controller.LoginController">
-    <children>
-        <VBox alignment="CENTER" layoutX="175.0" layoutY="50.0" spacing="20.0" styleClass="card" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0" AnchorPane.topAnchor="50.0">
-            <children>
-                <Label styleClass="title-label" text="Chào Mừng Trở Lại" />
-                
-                <VBox spacing="5.0">
-                    <children>
-                        <Label styleClass="input-label" text="Tên đăng nhập" />
-                        <TextField fx:id="username_in" promptText="Nhập tên đăng nhập" />
-                    </children>
-                </VBox>
-                
-                <VBox spacing="5.0">
-                    <children>
-                        <Label styleClass="input-label" text="Mật khẩu" />
-                        <PasswordField fx:id="password_in" promptText="Nhập mật khẩu" />
-                    </children>
-                </VBox>
-                
-                <Button fx:id="ok" maxWidth="Infinity" mnemonicParsing="false" text="Đăng nhập" />
-                
-                <HBox alignment="CENTER" spacing="5.0">
-                    <children>
-                        <Label styleClass="secondary-text" text="Chưa có tài khoản?" />
-                        <Label fx:id="signup" styleClass="link-label" text="Đăng ký ngay" />
-                    </children>
-                </HBox>
-            </children>
+<AnchorPane prefHeight="450.0" prefWidth="650.0" styleClass="main-root" stylesheets="@style.css"
+            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.group15.daugia.client.controller.LoginController">
+    <VBox alignment="CENTER" layoutX="175.0" layoutY="50.0" spacing="20.0" styleClass="card"
+          AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0"
+          AnchorPane.topAnchor="50.0">
+        <Label styleClass="title-label" text="Chào Mừng Trở Lại"/>
+
+        <VBox spacing="5.0">
+            <Label styleClass="input-label" text="Tên đăng nhập"/>
+            <TextField fx:id="username_in" promptText="Nhập tên đăng nhập"/>
         </VBox>
-    </children>
+
+        <VBox spacing="5.0">
+            <Label styleClass="input-label" text="Mật khẩu"/>
+            <PasswordField fx:id="password_in" promptText="Nhập mật khẩu"/>
+        </VBox>
+
+        <Button fx:id="ok" maxWidth="Infinity" mnemonicParsing="false" text="Đăng nhập"/>
+
+        <HBox alignment="CENTER" spacing="5.0">
+            <Label styleClass="secondary-text" text="Chưa có tài khoản?"/>
+            <Label fx:id="signup" styleClass="link-label" text="Đăng ký ngay"/>
+        </HBox>
+    </VBox>
 </AnchorPane>

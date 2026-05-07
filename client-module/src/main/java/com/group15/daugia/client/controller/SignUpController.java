@@ -3,7 +3,7 @@ package com.group15.daugia.client.controller;
 import com.google.gson.Gson;
 import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.PasswordField;
@@ -34,7 +34,7 @@ public class SignUpController implements Initializable {
           String password = password_in.getText();
           String role = signup_role.getValue();
           Gson gson = new Gson();
-          JSONUserTemplate userTemp = new JSONUserTemplate();
+          JSONUserTemp userTemp = new JSONUserTemp();
           userTemp.setUsername(username);
           userTemp.setPassword(password);
 
@@ -60,4 +60,3 @@ public class SignUpController implements Initializable {
         });
   }
 }
-

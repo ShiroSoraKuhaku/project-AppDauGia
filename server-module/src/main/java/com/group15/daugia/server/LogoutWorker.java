@@ -2,7 +2,7 @@ package com.group15.daugia.server;
 
 import com.google.gson.Gson;
 import com.group15.daugia.server.DAO.UserDAO;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 
 public class LogoutWorker implements Workable {
 
@@ -11,7 +11,7 @@ public class LogoutWorker implements Workable {
     Gson gson = new Gson();
     UserDAO checkAcc = UserDAO.getUserDao();
 
-    JSONUserTemplate userTemp = gson.fromJson(data, JSONUserTemplate.class);
+    JSONUserTemp userTemp = gson.fromJson(data, JSONUserTemp.class);
     String[] userData = userTemp.getAfterLoginData();
     return checkAcc.removeLogin(userData[0], userData[1]);
   }

@@ -1,6 +1,6 @@
 package com.group15.daugia.shared; // File template json cho data user
 
-public class JSONUserTemplate {
+public class JSONUserTemp {
   private String password;
   private String username;
   private String id;
@@ -27,7 +27,7 @@ public class JSONUserTemplate {
   }
 
   public String[] getAfterLoginData() {
-    return new String[] {id, token};
+    return new String[] {username, token};
   }
 
   public String getToken() {

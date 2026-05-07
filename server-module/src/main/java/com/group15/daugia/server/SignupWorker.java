@@ -2,14 +2,14 @@ package com.group15.daugia.server;
 
 import com.google.gson.Gson;
 import com.group15.daugia.server.DAO.UserDAO;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 
 public class SignupWorker implements Workable {
 
   @Override
   public String work(String data) {
     Gson gson = new Gson();
-    JSONUserTemplate userDataJSON = gson.fromJson(data, JSONUserTemplate.class);
+    JSONUserTemp userDataJSON = gson.fromJson(data, JSONUserTemp.class);
     String[] userData = userDataJSON.getLoginData();
     UserDAO userDao = UserDAO.getUserDao();
 

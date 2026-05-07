@@ -80,7 +80,6 @@ public class UserDAO {
       int rowAffected = statement1.executeUpdate();
       return "1";
     } catch (SQLException e) {
-      e.printStackTrace();
       if (e.getErrorCode() == 1062) {
         return "DUPLICATE";
       } else {

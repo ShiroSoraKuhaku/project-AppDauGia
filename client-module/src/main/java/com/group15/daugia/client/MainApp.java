@@ -5,7 +5,7 @@ import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.model.User;
 import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -20,7 +20,7 @@ public class MainApp extends Application {
         windowEvent -> {
           if (SessionManager.getToken() != null && !SessionManager.getToken().isEmpty()) {
             Gson gson = new Gson();
-            JSONUserTemplate loggedUser = new JSONUserTemplate();
+            JSONUserTemp loggedUser = new JSONUserTemp();
             loggedUser.setId(User.getId());
             loggedUser.setToken(SessionManager.getToken());
 

@@ -2,7 +2,7 @@ package com.group15.daugia.server;
 
 import com.google.gson.Gson;
 import com.group15.daugia.server.DAO.UserDAO;
-import com.group15.daugia.shared.JSONUserTemplate;
+import com.group15.daugia.shared.JSONUserTemp;
 
 public class LoginWorker implements Workable {
 
@@ -10,15 +10,15 @@ public class LoginWorker implements Workable {
   public String work(String data) {
     String answer;
     Gson gson = new Gson();
-    JSONUserTemplate userTemplate = gson.fromJson(data, JSONUserTemplate.class);
+    JSONUserTemp userTemplate = gson.fromJson(data, JSONUserTemp.class);
     String[] userData = userTemplate.getLoginData();
     UserDAO checkAcc = UserDAO.getUserDao();
 
     String[] token = checkAcc.checkLogin(userData[0], userData[1]);
     if (token == null) {
-      answer = gson.toJson(new JSONUserTemplate());
+      answer = gson.toJson(new JSONUserTemp());
     } else {
-      JSONUserTemplate loggedUser = new JSONUserTemplate();
+      JSONUserTemp loggedUser = new JSONUserTemp();
       loggedUser.setToken(token[1]);
       loggedUser.setUsername(token[0]);
       answer = gson.toJson(loggedUser);
