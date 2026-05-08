@@ -1,6 +1,6 @@
 package com.group15.daugia.shared; // File template json cho data user
 
-public class JSONUserTemp {
+public class JSONUserTemp extends JSONTemp {
   private String password;
   private String username;
   private String id;

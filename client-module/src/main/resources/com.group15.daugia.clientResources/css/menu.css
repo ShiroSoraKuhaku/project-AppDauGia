@@ -1,0 +1,60 @@
+.menu-root {
+    -fx-background-color: #f4f7f6;
+}
+
+.menu-card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+    -fx-padding: 28 30;
+}
+
+.menu-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+.menu-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #777777;
+}
+
+.menu-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-background-color: #45a049;
+}
+
+.menu-button:pressed {
+    -fx-background-color: #3e8e41;
+}
+
+.menu-button-secondary {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 6;
+    -fx-border-color: #4CAF50;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+}
+
+.menu-button-secondary:hover {
+    -fx-background-color: #f1f8f2;
+}
+
+.menu-button-secondary:pressed {
+    -fx-background-color: #e8f3ea;
+}

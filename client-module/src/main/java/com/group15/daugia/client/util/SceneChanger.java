@@ -9,6 +9,7 @@ import java.io.IOException;
 
 public class SceneChanger {
   private static Stage mainStage;
+  private static boolean startup;
 
   public static void setMainStage(Stage stage) {
     mainStage = stage;
@@ -19,8 +20,15 @@ public class SceneChanger {
       FXMLLoader loader = new FXMLLoader(SceneChanger.class.getClassLoader().getResource(fxmlPath));
       Parent root = loader.load();
 
-      mainStage.setScene(new Scene(root));
-      mainStage.show();
+      if (startup) {
+        mainStage.getScene().setRoot(root);
+      } else {
+        mainStage.setScene(new Scene(root));
+        mainStage.show();
+        startup = true;
+      }
+      mainStage.sizeToScene();
+      mainStage.centerOnScreen();
 
       return loader.getController();
 
