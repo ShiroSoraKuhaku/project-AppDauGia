@@ -6,6 +6,8 @@ public class JSONItemTemp {
   private double price;
   private String desc;
 
+  private String token;
+
   public int getId() {
     return id;
   }
@@ -36,5 +38,13 @@ public class JSONItemTemp {
 
   public void setDesc(String desc) {
     this.desc = desc;
+  }
+
+  public String getToken(){
+    return token;
+  }
+
+  public void setToken(String token){
+    this.token = token;
   }
 }

@@ -87,4 +87,25 @@ public class UserDAO {
       }
     }
   }
+
+  public String getUsernameByToken(String token){
+    String sql = "select username from tokens where token = ?";
+
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
+            );
+         PreparedStatement statement = conn.prepareStatement(sql)){
+      statement.setString(1, token);
+
+      try (ResultSet resultSet = statement.executeQuery()){
+        if (resultSet.next()){
+          return resultSet.getString("username");
+        }
+        return null;
+      }
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+  }
 }

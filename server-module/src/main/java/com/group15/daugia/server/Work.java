@@ -10,6 +10,7 @@ public class Work {
     works.put("LOGIN", new LoginWorker());
     works.put("RM-TOKEN", new LogoutWorker());
     works.put("SIGNUP", new SignupWorker());
+    works.put("SELL-ITEM", new SellItemWorker());
   }
 
   public static Map<String, Workable> getWorks() {
