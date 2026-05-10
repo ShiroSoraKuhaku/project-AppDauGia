@@ -21,7 +21,7 @@ public class ItemDAO {
     }
 
     public String addItem(String sellerUsername, String name, double price, String desc){
-        String sql = "insert into items (seller_name, name, price, 'desc') values (?, ?, ?, ?)";
+        String sql = "insert into items (seller_name, name, price, `desc`) values (?, ?, ?, ?)";
 
         try (Connection conn =
                      DriverManager.getConnection(

@@ -25,20 +25,22 @@ DROP TABLE IF EXISTS `items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `items` (
-  `id` int NOT NULL AUTO_INCREMENT, /*Thêm AUTO_INCREMENT để id tự tăng - ngày 10/5 */
+  `id` int NOT NULL AUTO_INCREMENT,
+  `seller_username` varchar(45) NOT NULL,
   `name` varchar(45) NOT NULL,
   `price` double NOT NULL,
   `desc` varchar(255) DEFAULT NULL,
   `item_spec` json DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  CONSTRAINT `fk_items_seller`
+      FOREIGN KEY (`seller_username`) REFERENCES `user` (`username`)
+  /*UNIQUE KEY `id_UNIQUE` (`id`)*/
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `tokens`
 --
-
 DROP TABLE IF EXISTS `tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
