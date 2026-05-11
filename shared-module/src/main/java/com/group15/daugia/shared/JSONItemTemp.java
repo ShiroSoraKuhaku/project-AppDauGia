@@ -8,6 +8,8 @@ public class JSONItemTemp {
 
   private String token;
 
+  private String sellerUsername;
+
   public int getId() {
     return id;
   }
@@ -40,11 +42,22 @@ public class JSONItemTemp {
     this.desc = desc;
   }
 
+
+
   public String getToken(){
     return token;
   }
 
   public void setToken(String token){
     this.token = token;
+  }
+
+
+  public String getSellerUsername() {
+    return sellerUsername;
+  }
+
+  public void setSellerUsername(String sellerUsername) {
+    this.sellerUsername = sellerUsername;
   }
 }

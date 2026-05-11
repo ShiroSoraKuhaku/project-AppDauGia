@@ -1,11 +1,10 @@
 package com.group15.daugia.server.DAO;
 
 import com.group15.daugia.server.resource.DBProperty;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import com.group15.daugia.shared.JSONItemTemp;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemDAO {
     private static ItemDAO instance;
@@ -21,7 +20,7 @@ public class ItemDAO {
     }
 
     public String addItem(String sellerUsername, String name, double price, String desc){
-        String sql = "insert into items (seller_name, name, price, `desc`) values (?, ?, ?, ?)";
+        String sql = "insert into items (seller_username, name, price, `desc`) values (?, ?, ?, ?)";
 
         try (Connection conn =
                      DriverManager.getConnection(
@@ -34,6 +33,30 @@ public class ItemDAO {
             statement.setString(4, desc);
 
             return statement.executeLargeUpdate() == 1 ? "1" : "0";
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<JSONItemTemp> getAllItems(){
+        String sql = "select id, seller_username, name, price, `desc` from items order by id desc";
+        List<JSONItemTemp> items = new ArrayList<>();
+
+        try (Connection conn =
+                DriverManager.getConnection(
+                        dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+             PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()){
+                JSONItemTemp item = new JSONItemTemp();
+                item.setId(resultSet.getInt("id"));
+                item.setSellerUsername(resultSet.getNString("seller_username"));
+                item.setName(resultSet.getNString("name"));
+                item.setPrice(resultSet.getDouble("price"));
+                item.setDesc(resultSet.getNString("desc"));
+                items.add(item);
+            }
+            return items;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

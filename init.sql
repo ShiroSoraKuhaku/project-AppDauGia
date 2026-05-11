@@ -20,6 +20,15 @@ USE daugiadb;
 --
 -- Table structure for table `items`
 --
+DROP TABLE IF EXISTS `user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user` (
+                        `username` varchar(45) NOT NULL,
+                        `password` varchar(45) DEFAULT NULL,
+                        PRIMARY KEY (`username`),
+                        UNIQUE KEY `username_UNIQUE` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -41,6 +50,17 @@ CREATE TABLE `items` (
 --
 -- Table structure for table `tokens`
 --
+--
+-- CREATE TABLE bids (
+--     id int NOT NULL AUTO_INCREMENT,
+--     item_id int NOT NULL,
+--     bidder_username varchar(45) NOT NULL,
+--     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+--     PRIMARY KEY (id),
+--     FOREIGN KEY (item_id) REFERENCES items(id),
+--     FOREIGN KEY (bidder_username) REFERENCES user(username)
+-- );
+
 DROP TABLE IF EXISTS `tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -57,15 +77,7 @@ CREATE TABLE `tokens` (
 -- Table structure for table `user`
 --
 
-DROP TABLE IF EXISTS `user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user` (
-  `username` varchar(45) NOT NULL,
-  `password` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`username`),
-  UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
