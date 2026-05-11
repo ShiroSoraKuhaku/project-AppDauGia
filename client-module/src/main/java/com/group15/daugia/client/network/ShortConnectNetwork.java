@@ -20,7 +20,7 @@ public class ShortConnectNetwork {
       String inData = in.readLine();
       // JSONTemp data = gson.fromJson(inData, JSONTemp.class);
       // return data;
-      // TODO:
+      // TOD
       return inData;
     } catch (IOException e) {
       throw new RuntimeException(e);

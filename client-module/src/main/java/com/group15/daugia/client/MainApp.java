@@ -21,7 +21,7 @@ public class MainApp extends Application {
           if (SessionManager.getToken() != null && !SessionManager.getToken().isEmpty()) {
             Gson gson = new Gson();
             JSONUserTemp loggedUser = new JSONUserTemp();
-            loggedUser.setId(User.getId());
+            loggedUser.setUsername(User.getUsername());
             loggedUser.setToken(SessionManager.getToken());
 
             ShortConnectNetwork.shortReq("RM-TOKEN", gson.toJson(loggedUser));
