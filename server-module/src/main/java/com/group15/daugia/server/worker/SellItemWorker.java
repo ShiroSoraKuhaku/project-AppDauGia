@@ -1,11 +1,12 @@
-package com.group15.daugia.server;
+package com.group15.daugia.server.worker;
 
 import com.google.gson.Gson;
 import com.group15.daugia.server.DAO.ItemDAO;
 import com.group15.daugia.server.DAO.UserDAO;
+import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSONItemTemp;
 
-public class SellItemWorker implements Workable{
+public class SellItemWorker implements Workable {
     @Override
     public String work(String data){
         Gson gson = new Gson();
