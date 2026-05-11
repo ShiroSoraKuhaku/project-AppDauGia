@@ -1,5 +1,9 @@
 package com.group15.daugia.server;
 
+import com.group15.daugia.server.worker.LoginWorker;
+import com.group15.daugia.server.worker.LogoutWorker;
+import com.group15.daugia.server.worker.SignupWorker;
+
 import java.util.HashMap;
 import java.util.Map;
 

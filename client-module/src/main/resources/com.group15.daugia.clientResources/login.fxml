@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="450.0" prefWidth="650.0" styleClass="main-root" stylesheets="@style.css"
+<AnchorPane prefHeight="450.0" prefWidth="650.0" styleClass="main-root" stylesheets="@css/base.css, @css/auth.css"
             xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.group15.daugia.client.controller.LoginController">
     <VBox alignment="CENTER" layoutX="175.0" layoutY="50.0" spacing="20.0" styleClass="card"

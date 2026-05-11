@@ -1,18 +1,9 @@
 package com.group15.daugia.shared;
 
-public class JSONItemTemp {
-  private int id;
+public class JSONItemTemp extends JSONTemp {
   private String name;
   private double price;
   private String desc;
-
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
 
   public String getName() {
     return name;
