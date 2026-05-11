@@ -5,6 +5,18 @@ public class JSONItemTemp extends JSONTemp {
   private double price;
   private String desc;
 
+  private String token;
+
+  private String sellerUsername;
+
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int id) {
+    this.id = id;
+  }
+
   public String getName() {
     return name;
   }
@@ -27,5 +39,24 @@ public class JSONItemTemp extends JSONTemp {
 
   public void setDesc(String desc) {
     this.desc = desc;
+  }
+
+
+
+  public String getToken(){
+    return token;
+  }
+
+  public void setToken(String token){
+    this.token = token;
+  }
+
+
+  public String getSellerUsername() {
+    return sellerUsername;
+  }
+
+  public void setSellerUsername(String sellerUsername) {
+    this.sellerUsername = sellerUsername;
   }
 }
