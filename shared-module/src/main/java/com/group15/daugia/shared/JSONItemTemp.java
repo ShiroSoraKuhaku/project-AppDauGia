@@ -1,7 +1,6 @@
 package com.group15.daugia.shared;
 
-public class JSONItemTemp {
-  private int id;
+public class JSONItemTemp extends JSONTemp {
   private String name;
   private double price;
   private String desc;

@@ -4,6 +4,7 @@ import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.client.model.User;
 import com.group15.daugia.client.network.ShortConnectNetwork;
+import com.group15.daugia.shared.JSONTemp;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -41,8 +42,10 @@ public class LoginController implements Initializable {
           Gson gson = new Gson();
           String userData = gson.toJson(userTemp);
 
+          // JSONTemp answer = ShortConnectNetwork.shortReq("LOGIN", userData);
           String answer = ShortConnectNetwork.shortReq("LOGIN", userData);
           System.out.println(answer);
+          // JSONUserTemp afterLoginData = (JSONUserTemp) answer;
           JSONUserTemp afterLoginData = gson.fromJson(answer, JSONUserTemp.class);
           if (afterLoginData.getToken() == null) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -52,7 +55,7 @@ public class LoginController implements Initializable {
             alert.showAndWait();
           } else {
             MenuBidderController nextController =
-                SceneChanger.changeTo("com.group15.daugia.clientResources/menu_bidder.fxml");
+                SceneChanger.changeTo("com.group15.daugia.clientResources/menu_seller.fxml");
             User.setUsername(username);
             SessionManager.setToken(afterLoginData.getToken());
             System.out.println(SessionManager.getToken());
