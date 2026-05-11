@@ -1,6 +1,7 @@
 package com.group15.daugia.shared;
 
 public class JSONItemTemp extends JSONTemp {
+  private int id;
   private String name;
   private double price;
   private String desc;
@@ -41,16 +42,13 @@ public class JSONItemTemp extends JSONTemp {
     this.desc = desc;
   }
 
-
-
-  public String getToken(){
+  public String getToken() {
     return token;
   }
 
-  public void setToken(String token){
+  public void setToken(String token) {
     this.token = token;
   }
-
 
   public String getSellerUsername() {
     return sellerUsername;
