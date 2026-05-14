@@ -3,7 +3,7 @@ package com.group15.daugia.client.controller;
 import com.google.gson.Gson;
 import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
-import com.group15.daugia.shared.JSONUserTemp;
+import com.group15.daugia.shared.JSON.JSONUserTemp;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.PasswordField;
@@ -39,7 +39,8 @@ public class SignUpController implements Initializable {
           userTemp.setPassword(password);
 
           String data = ShortConnectNetwork.shortReq("SIGNUP", gson.toJson(userTemp));
-          if (data.equals("1")) {
+          JSONUserTemp answerData = gson.fromJson(data, JSONUserTemp.class);
+          if (answerData.getResponse().charAt(0) == '2') {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Success");
             alert.setHeaderText("You successfully registed a new account");
@@ -48,7 +49,7 @@ public class SignUpController implements Initializable {
             SceneChanger.changeTo("com.group15.daugia.clientResources/login.fxml");
           } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Failed");
+            alert.setTitle(answerData.getResponse());
             alert.setHeaderText("You account or password has already been used");
             alert.setContentText("Try again");
             alert.showAndWait();

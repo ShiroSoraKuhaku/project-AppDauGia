@@ -1,4 +1,4 @@
-package com.group15.daugia.shared; // File template json cho data user
+package com.group15.daugia.shared.JSON; // File template json cho data user
 
 public class JSONUserTemp extends JSONTemp {
   private String password;

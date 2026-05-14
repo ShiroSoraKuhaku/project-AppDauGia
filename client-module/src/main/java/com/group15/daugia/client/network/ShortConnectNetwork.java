@@ -1,7 +1,6 @@
 package com.group15.daugia.client.network;
 
 import com.google.gson.Gson;
-import com.group15.daugia.shared.JSONTemp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
