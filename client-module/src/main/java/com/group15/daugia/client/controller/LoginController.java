@@ -4,7 +4,6 @@ import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.client.model.User;
 import com.group15.daugia.client.network.ShortConnectNetwork;
-import com.group15.daugia.shared.JSONTemp;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -15,7 +14,7 @@ import javafx.scene.control.PasswordField;
 import java.net.URL;
 import java.util.ResourceBundle;
 import com.google.gson.Gson;
-import com.group15.daugia.shared.JSONUserTemp;
+import com.group15.daugia.shared.JSON.JSONUserTemp;
 import javafx.scene.control.TextField;
 
 public class LoginController implements Initializable {
@@ -47,9 +46,9 @@ public class LoginController implements Initializable {
           System.out.println(answer);
           // JSONUserTemp afterLoginData = (JSONUserTemp) answer;
           JSONUserTemp afterLoginData = gson.fromJson(answer, JSONUserTemp.class);
-          if (afterLoginData.getToken() == null) {
+          if (afterLoginData.getResponse().charAt(0) == '4') {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Error");
+            alert.setTitle(afterLoginData.getResponse());
             alert.setHeaderText("Cannot Login");
             alert.setContentText("Username or Password is wrong");
             alert.showAndWait();

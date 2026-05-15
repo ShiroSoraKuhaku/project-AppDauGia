@@ -1,4 +1,4 @@
-package com.group15.daugia.shared;
+package com.group15.daugia.shared.JSON;
 
 public class JSONItemTemp extends JSONTemp {
   private int id;

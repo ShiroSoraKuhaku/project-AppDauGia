@@ -1,4 +1,4 @@
-package com.group15.daugia.shared;
+package com.group15.daugia.shared.JSON;
 
 public abstract class JSONTemp {
   private String response;
