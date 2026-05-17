@@ -15,6 +15,7 @@ public class Work {
     works.put("SELL-ITEM", new SellItemWorker());
     works.put("GET-ITEMS", new GetItemsWorker());
     works.put("BID", new BidWorker());
+    works.put("GET-MY-ITEMS", new GetMyItemsWorker());
   }
 
   public static Map<String, Workable> getWorks() {
