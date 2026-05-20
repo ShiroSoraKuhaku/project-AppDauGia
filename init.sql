@@ -97,6 +97,7 @@ CREATE TABLE `tokens` (
 -- Auction tables (added for real-time auction feature)
 -- -------------------------------------------------------
 
+DROP TABLE IF EXISTS `auction_auto_bids`;
 DROP TABLE IF EXISTS `auction_bids`;
 DROP TABLE IF EXISTS `auctions`;
 
@@ -128,4 +129,17 @@ CREATE TABLE `auction_bids` (
   CONSTRAINT `fk_bids_bidder`   FOREIGN KEY (`bidder_username`) REFERENCES `user` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dump completed on 2026-05-06 11:03:21
+CREATE TABLE `auction_auto_bids` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `auction_id` int NOT NULL,
+    `bidder_username` varchar(45) NOT NULL,
+    `max_amount` double NOT NULL,
+    `active` boolean NOT NULL DEFAULT true,
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_auto_bid_auction_user` (`auction_id`, `bidder_username`),
+    KEY `idx_auto_bid_auction_amount` (`auction_id`, `max_amount` DESC),
+    CONSTRAINT `fk_auto_bid_auction` FOREIGN KEY (`auction_id`) REFERENCES `auctions` (`id`),
+    CONSTRAINT `fk_auto_bid_user` FOREIGN KEY (`bidder_username`) REFERENCES `user` (`username`)
+);
