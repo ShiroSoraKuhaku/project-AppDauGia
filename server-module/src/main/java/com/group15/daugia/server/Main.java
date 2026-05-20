@@ -1,18 +1,18 @@
 package com.group15.daugia.server;
 
-import javax.imageio.IIOException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main {
 
   public static void main(String[] args) {
+    // Bootstrap AuctionClock: load và lên lịch tất cả auction SCHEDULED/ACTIVE từ DB
+    AuctionClock.getInstance().bootstrap();
+
     Socket socket;
     ArrayList<ClientHandler> clients = new ArrayList<>();
     ExecutorService threadPool = Executors.newFixedThreadPool(10);

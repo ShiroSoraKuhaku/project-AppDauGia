@@ -14,6 +14,11 @@ public class Work {
     works.put("SIGNUP", new SignupWorker());
     works.put("SELL-ITEM", new SellItemWorker());
     works.put("GET-ITEMS", new GetItemsWorker());
+    // Auction workers
+    works.put("WATCH-AUCTION", new WatchAuctionWorker());
+    works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());
+    works.put("PLACE-BID", new PlaceBidWorker());
+    works.put("GET-AUCTION-STATE", new GetAuctionStateWorker());
   }
 
   public static Map<String, Workable> getWorks() {
