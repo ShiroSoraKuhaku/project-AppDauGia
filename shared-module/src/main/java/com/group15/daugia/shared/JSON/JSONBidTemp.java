@@ -1,31 +1,52 @@
 package com.group15.daugia.shared.JSON;
 
-public class JSONBidTemp extends JSONTemp{
-    private int itemId;
-    private double price;
-    private String token;
+/** JSON template cho PLACE-BID request/response. */
+public class JSONBidTemp extends JSONTemp {
+  private int auctionId;
+  private String token;
+  private double bidAmount;
 
-    public int getItemId(){
-        return itemId;
-    }
+  // Response fields
+  private String bidderUsername;
+  private String createdAt;
 
-    public void setItemId(int itemId) {
-        this.itemId = itemId;
-    }
+  public int getAuctionId() {
+    return auctionId;
+  }
 
-    public double getPrice() {
-        return price;
-    }
+  public void setAuctionId(int auctionId) {
+    this.auctionId = auctionId;
+  }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
+  public String getToken() {
+    return token;
+  }
 
-    public String getToken() {
-        return token;
-    }
+  public void setToken(String token) {
+    this.token = token;
+  }
 
-    public void setToken(String token) {
-        this.token = token;
-    }
+  public double getBidAmount() {
+    return bidAmount;
+  }
+
+  public void setBidAmount(double bidAmount) {
+    this.bidAmount = bidAmount;
+  }
+
+  public String getBidderUsername() {
+    return bidderUsername;
+  }
+
+  public void setBidderUsername(String bidderUsername) {
+    this.bidderUsername = bidderUsername;
+  }
+
+  public String getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(String createdAt) {
+    this.createdAt = createdAt;
+  }
 }
