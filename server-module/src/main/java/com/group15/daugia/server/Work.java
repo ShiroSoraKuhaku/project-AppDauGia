@@ -21,6 +21,8 @@ public class Work {
     works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());
     works.put("PLACE-BID", new PlaceBidWorker());
     works.put("GET-AUCTION-STATE", new GetAuctionStateWorker());
+
+    works.put("SET-AUTO-BID", new AutoBidWorker());
   }
 
   public static Map<String, Workable> getWorks() {

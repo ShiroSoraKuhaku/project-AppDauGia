@@ -71,33 +71,32 @@ public class PlaceBidWorker implements Workable {
     JSONAuctionTemp newSnap = dao.getAuctionSnapshot(req.getAuctionId());
 
     // 5. Broadcast BID_PLACED event đến tất cả watcher
-    JSONAuctionEventTemp event = getJsonAuctionEventTemp(req, newSnap, username);
+    JSONAuctionEventTemp event = getJsonAuctionEventTemp(newSnap);
     watcherSvc.broadcast(req.getAuctionId(), event);
 
     // 6. Kiểm tra gia hạn anti-sniping
     clock.tryExtend(req.getAuctionId());
 
-    // 7. Trả response thành công
+    // 7. Trả response thành công với trạng thái cuối cùng sau auto bid
     ans.setResponse("201 Created");
     ans.setAuctionId(req.getAuctionId());
-    ans.setBidderUsername(username);
-    ans.setBidAmount(req.getBidAmount());
+    ans.setBidderUsername(newSnap.getCurLeader());
+    ans.setBidAmount(newSnap.getCurPrice());
     return gson.toJson(ans);
   }
 
-  private static JSONAuctionEventTemp getJsonAuctionEventTemp(
-      JSONBidTemp req, JSONAuctionTemp newSnap, String username) {
+  private static JSONAuctionEventTemp getJsonAuctionEventTemp(JSONAuctionTemp newSnap) {
     JSONAuctionEventTemp event = new JSONAuctionEventTemp();
     event.setEventType("BID_PLACED");
-    event.setAuctionId(req.getAuctionId());
+    event.setAuctionId(newSnap.getAuctionId());
     event.setStatus("ACTIVE");
     event.setCurPrice(newSnap.getCurPrice());
     event.setCurLeader(newSnap.getCurLeader());
     event.setEndTime(newSnap.getEndTime());
     event.setSecondsRemaining(newSnap.getSecondsRemaining());
     event.setVersion(newSnap.getVersion());
-    event.setBidderUsername(username);
-    event.setBidAmount(req.getBidAmount());
+    event.setBidderUsername(newSnap.getCurLeader());
+    event.setBidAmount(newSnap.getCurPrice());
     return event;
   }
 }
