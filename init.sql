@@ -20,19 +20,22 @@ USE daugiadb;
 --
 -- Table structure for table `items`
 --
+-- Drop order: child tables first, then parent tables
+DROP TABLE IF EXISTS `auction_auto_bids`;
+DROP TABLE IF EXISTS `auction_bids`;
+DROP TABLE IF EXISTS `auctions`;
+DROP TABLE IF EXISTS `bids`;
+DROP TABLE IF EXISTS `tokens`;
+DROP TABLE IF EXISTS `items`;
 DROP TABLE IF EXISTS `user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `user` (
-                        `username` varchar(45) NOT NULL,
-                        `password` varchar(45) DEFAULT NULL,
-                        PRIMARY KEY (`username`),
-                        UNIQUE KEY `username_UNIQUE` (`username`)
+    `username` varchar(45) NOT NULL,
+    `password` varchar(45) DEFAULT NULL,
+    PRIMARY KEY (`username`),
+    UNIQUE KEY `username_UNIQUE` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-DROP TABLE IF EXISTS `items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `items` (
   `id` int NOT NULL AUTO_INCREMENT,
   `seller_username` varchar(45) NOT NULL,
@@ -43,29 +46,8 @@ CREATE TABLE `items` (
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_items_seller`
       FOREIGN KEY (`seller_username`) REFERENCES `user` (`username`)
-  /*UNIQUE KEY `id_UNIQUE` (`id`)*/
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `tokens`
---
---
-DROP TABLE IF EXISTS `bids`;
-CREATE TABLE bids (
-    id int NOT NULL AUTO_INCREMENT,
-    item_id int NOT NULL,
-    bidder_username varchar(45) NOT NULL,
-    price double NOT NULL,
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    FOREIGN KEY (item_id) REFERENCES items(id),
-    FOREIGN KEY (bidder_username) REFERENCES user(username)
-);
-
-DROP TABLE IF EXISTS `tokens`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tokens` (
   `username` varchar(45) NOT NULL,
   `token` varchar(45) DEFAULT NULL,
@@ -73,18 +55,18 @@ CREATE TABLE `tokens` (
   UNIQUE KEY `token_UNIQUE` (`token`),
   CONSTRAINT `username` FOREIGN KEY (`username`) REFERENCES `user` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `user`
---
+CREATE TABLE `bids` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `item_id` int NOT NULL,
+    `bidder_username` varchar(45) NOT NULL,
+    `price` double NOT NULL,
+    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_bids_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`),
+    CONSTRAINT `fk_bids_user` FOREIGN KEY (`bidder_username`) REFERENCES `user` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping routines for database 'daugiadb'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -96,12 +78,8 @@ CREATE TABLE `tokens` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- -------------------------------------------------------
--- Auction tables (added for real-time auction feature)
+-- Auction tables
 -- -------------------------------------------------------
-
-DROP TABLE IF EXISTS `auction_auto_bids`;
-DROP TABLE IF EXISTS `auction_bids`;
-DROP TABLE IF EXISTS `auctions`;
 
 CREATE TABLE `auctions` (
   `id`          int NOT NULL AUTO_INCREMENT,

@@ -3,8 +3,8 @@ package com.group15.daugia.shared.JSON;
 /** JSON template cho PLACE-BID request/response. */
 public class JSONBidTemp extends JSONTemp {
   private int auctionId;
-  private String token;
   private double bidAmount;
+  private String token;
 
   // Response fields
   private String bidderUsername;
@@ -18,20 +18,20 @@ public class JSONBidTemp extends JSONTemp {
     this.auctionId = auctionId;
   }
 
-  public String getToken() {
-    return token;
-  }
-
-  public void setToken(String token) {
-    this.token = token;
-  }
-
   public double getBidAmount() {
     return bidAmount;
   }
 
   public void setBidAmount(double bidAmount) {
     this.bidAmount = bidAmount;
+  }
+
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
   }
 
   public String getBidderUsername() {
