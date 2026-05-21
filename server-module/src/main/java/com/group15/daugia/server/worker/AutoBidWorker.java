@@ -5,12 +5,24 @@ import com.group15.daugia.server.AuctionClock;
 import com.group15.daugia.server.DAO.AuctionDao;
 import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
+import com.group15.daugia.server.service.AuctionEventHelper;
 import com.group15.daugia.server.service.AuctionWatcherService;
-import com.group15.daugia.shared.JSON.JSONAuctionEventTemp;
 import com.group15.daugia.shared.JSON.JSONAuctionTemp;
 import com.group15.daugia.shared.JSON.JSONAutoBidTemp;
 
+/**
+ * SET-AUTO-BID: đặt giá tự động tối đa cho một auction đang ACTIVE.
+ *
+ * <p>Request JSON: { "auctionId": 1, "token": "...", "maxAmount": 200.0 }
+ * Response JSON:
+ *   { "response": "201 Created", "auctionId": 1, "bidderUsername": "...", "maxAmount": 200.0 }
+ *   { "response": "400 Bad Request" } nếu input không hợp lệ / auction không ACTIVE
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *   { "response": "404 Not Found" } nếu auction không tồn tại
+ *   { "response": "409 Conflict" } nếu maxAmount thấp hơn giá hiện tại
+ */
 public class AutoBidWorker implements Workable {
+
   private final Gson gson = new Gson();
   private final AuctionDao dao = AuctionDao.getInstance();
   private final AuctionWatcherService watcherSvc = AuctionWatcherService.getInstance();
@@ -47,7 +59,7 @@ public class AutoBidWorker implements Workable {
         ans.setResponse("201 Created");
         JSONAuctionTemp after = dao.getAuctionSnapshot(req.getAuctionId());
         if (after != null && after.getVersion() != oldVersion) {
-          watcherSvc.broadcast(req.getAuctionId(), buildBidEvent(after));
+          watcherSvc.broadcast(req.getAuctionId(), AuctionEventHelper.buildBidPlacedEvent(after));
           clock.tryExtend(req.getAuctionId());
         }
       }
@@ -62,20 +74,5 @@ public class AutoBidWorker implements Workable {
     ans.setBidderUsername(username);
     ans.setMaxAmount(req.getMaxAmount());
     return gson.toJson(ans);
-  }
-
-  private static JSONAuctionEventTemp buildBidEvent(JSONAuctionTemp snap) {
-    JSONAuctionEventTemp event = new JSONAuctionEventTemp();
-    event.setEventType("BID_PLACED");
-    event.setAuctionId(snap.getAuctionId());
-    event.setStatus(snap.getStatus());
-    event.setCurPrice(snap.getCurPrice());
-    event.setCurLeader(snap.getCurLeader());
-    event.setEndTime(snap.getEndTime());
-    event.setSecondsRemaining(snap.getSecondsRemaining());
-    event.setVersion(snap.getVersion());
-    event.setBidderUsername(snap.getCurLeader());
-    event.setBidAmount(snap.getCurPrice());
-    return event;
   }
 }
