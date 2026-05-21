@@ -52,10 +52,15 @@ public class PlaceBidWorker implements Workable {
       return gson.toJson(ans);
     }
 
-    // 3. Thực hiện đặt giá (transactional với version check)
+    // 3. Thực hiện đặt giá (optimistic retry, chuyển pessimistic trong 30s cuối)
+    boolean usePessimistic = snap.getSecondsRemaining() <= 30;
     boolean success =
         dao.placeBidTransactional(
-            req.getAuctionId(), username, req.getBidAmount(), snap.getVersion());
+            req.getAuctionId(),
+            username,
+            req.getBidAmount(),
+            snap.getVersion(),
+            usePessimistic);
 
     if (!success) {
       ans.setResponse("409 Conflict");

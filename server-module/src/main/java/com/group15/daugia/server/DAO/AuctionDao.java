@@ -111,12 +111,103 @@ public class AuctionDao {
   //    Trả về true nếu đặt giá thành công, false nếu điều kiện không thoả.
   // -----------------------------------------------------------------------
   public boolean placeBidTransactional(
+      int auctionId,
+      String bidderUsername,
+      double bidAmount,
+      int expectedVersion,
+      boolean usePessimistic) {
+    if (usePessimistic) {
+      return placeBidPessimistic(auctionId, bidderUsername, bidAmount);
+    }
+    return placeBidOptimisticWithRetry(auctionId, bidderUsername, bidAmount, expectedVersion);
+  }
+
+  private boolean placeBidOptimisticWithRetry(
       int auctionId, String bidderUsername, double bidAmount, int expectedVersion) {
-    String sqlCheck =
-        "SELECT status, end_time, cur_price, version FROM auctions " + "WHERE id = ? FOR UPDATE";
+    String sqlCheck = "SELECT status, end_time, cur_price, version FROM auctions WHERE id = ?";
     String sqlUpdate =
         "UPDATE auctions SET cur_price = ?, cur_leader = ?, "
             + "version = version + 1 WHERE id = ? AND version = ?";
+    String sqlBid =
+        "INSERT INTO auction_bids (auction_id, bidder_username, bid_amount) " + "VALUES (?, ?, ?)";
+
+    try (Connection conn = getConn()) {
+      conn.setAutoCommit(false);
+      try {
+        for (int attempt = 1; attempt <= 2; attempt++) {
+          int version;
+          // Kiểm tra điều kiện
+          try (PreparedStatement psCheck = conn.prepareStatement(sqlCheck)) {
+            psCheck.setInt(1, auctionId);
+            try (ResultSet rs = psCheck.executeQuery()) {
+              if (!rs.next()) {
+                conn.rollback();
+                return false;
+              }
+              String status = rs.getString("status");
+              String endTime = rs.getString("end_time");
+              double curPrice = rs.getDouble("cur_price");
+              version = rs.getInt("version");
+
+              LocalDateTime end = LocalDateTime.parse(endTime, FMT);
+              if (!"ACTIVE".equals(status)
+                  || LocalDateTime.now().isAfter(end)
+                  || bidAmount <= curPrice) {
+                conn.rollback();
+                return false;
+              }
+              if (attempt == 1 && version != expectedVersion) {
+                conn.rollback();
+                continue;
+              }
+            }
+          }
+
+          int versionToUse = (attempt == 1) ? expectedVersion : version;
+          // Cập nhật auction
+          try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+            psUpdate.setDouble(1, bidAmount);
+            psUpdate.setString(2, bidderUsername);
+            psUpdate.setInt(3, auctionId);
+            psUpdate.setInt(4, versionToUse);
+            if (psUpdate.executeUpdate() != 1) {
+              conn.rollback();
+              if (attempt == 1) {
+                continue;
+              }
+              return false;
+            }
+          }
+
+          // Ghi lịch sử bid
+          try (PreparedStatement psBid = conn.prepareStatement(sqlBid)) {
+            psBid.setInt(1, auctionId);
+            psBid.setString(2, bidderUsername);
+            psBid.setDouble(3, bidAmount);
+            psBid.executeUpdate();
+          }
+
+          conn.commit();
+          return true;
+        }
+        return false;
+      } catch (SQLException ex) {
+        conn.rollback();
+        throw ex;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private boolean placeBidPessimistic(int auctionId, String bidderUsername, double bidAmount) {
+    String sqlCheck =
+        "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
+    String sqlUpdate =
+        "UPDATE auctions SET cur_price = ?, cur_leader = ?, "
+            + "version = version + 1 WHERE id = ?";
     String sqlBid =
         "INSERT INTO auction_bids (auction_id, bidder_username, bid_amount) " + "VALUES (?, ?, ?)";
 
@@ -134,13 +225,11 @@ public class AuctionDao {
             String status = rs.getString("status");
             String endTime = rs.getString("end_time");
             double curPrice = rs.getDouble("cur_price");
-            int version = rs.getInt("version");
 
             LocalDateTime end = LocalDateTime.parse(endTime, FMT);
             if (!"ACTIVE".equals(status)
                 || LocalDateTime.now().isAfter(end)
-                || bidAmount <= curPrice
-                || version != expectedVersion) {
+                || bidAmount <= curPrice) {
               conn.rollback();
               return false;
             }
@@ -152,7 +241,6 @@ public class AuctionDao {
           psUpdate.setDouble(1, bidAmount);
           psUpdate.setString(2, bidderUsername);
           psUpdate.setInt(3, auctionId);
-          psUpdate.setInt(4, expectedVersion);
           if (psUpdate.executeUpdate() != 1) {
             conn.rollback();
             return false;
