@@ -14,6 +14,8 @@ public class Work {
     works.put("SIGNUP", new SignupWorker());
     works.put("SELL-ITEM", new SellItemWorker());
     works.put("GET-ITEMS", new GetItemsWorker());
+    works.put("BID", new BidWorker());
+    works.put("GET-MY-ITEMS", new GetMyItemsWorker());
     // Auction workers
     works.put("WATCH-AUCTION", new WatchAuctionWorker());
     works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());

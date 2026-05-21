@@ -61,4 +61,36 @@ public class ItemDAO {
       throw new RuntimeException(e);
     }
   }
+
+  public List<JSONItemTemp> getItemsBySeller(String sellerUsername){
+    String sql =
+            "select id, seller_username, name, price, `desc` from items where seller_username = ? order by id desc";
+    List<JSONItemTemp> items = new ArrayList<>();
+
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
+            );
+         PreparedStatement statement = conn.prepareStatement(sql)){
+
+      statement.setString(1, sellerUsername);
+
+      try (ResultSet resultSet = statement.executeQuery()){
+        while (resultSet.next()){
+          JSONItemTemp item = new JSONItemTemp();
+          item.setId(resultSet.getInt("id"));
+          item.setSellerUsername(resultSet.getString("seller_username"));
+          item.setName(resultSet.getString("name"));
+          item.setPrice(resultSet.getDouble("price"));
+          item.setDesc(resultSet.getString("desc"));
+          items.add(item);
+        }
+      }
+
+      return items;
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+  }
+
 }

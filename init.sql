@@ -51,15 +51,17 @@ CREATE TABLE `items` (
 -- Table structure for table `tokens`
 --
 --
--- CREATE TABLE bids (
---     id int NOT NULL AUTO_INCREMENT,
---     item_id int NOT NULL,
---     bidder_username varchar(45) NOT NULL,
---     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
---     PRIMARY KEY (id),
---     FOREIGN KEY (item_id) REFERENCES items(id),
---     FOREIGN KEY (bidder_username) REFERENCES user(username)
--- );
+DROP TABLE IF EXISTS `bids`;
+CREATE TABLE bids (
+    id int NOT NULL AUTO_INCREMENT,
+    item_id int NOT NULL,
+    bidder_username varchar(45) NOT NULL,
+    price double NOT NULL,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (item_id) REFERENCES items(id),
+    FOREIGN KEY (bidder_username) REFERENCES user(username)
+);
 
 DROP TABLE IF EXISTS `tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
