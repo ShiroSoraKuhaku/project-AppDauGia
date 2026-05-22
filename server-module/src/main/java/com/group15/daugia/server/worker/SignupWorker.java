@@ -13,9 +13,13 @@ public class SignupWorker implements Workable {
     JSONUserTemp userDataJSON = gson.fromJson(data, JSONUserTemp.class);
     JSONUserTemp ans = new JSONUserTemp();
     String[] userData = userDataJSON.getLoginData();
+    String role = userDataJSON.getRole();
+    if (role == null || role.isBlank()) {
+      role = "Bidder";
+    }
     UserDAO userDao = UserDAO.getUserDao();
 
-    String answer = userDao.signUp(userData[0], userData[1]);
+    String answer = userDao.signUp(userData[0], userData[1], role);
     if (answer.equals("1")) {
       ans.setResponse("201 Created");
     } else {

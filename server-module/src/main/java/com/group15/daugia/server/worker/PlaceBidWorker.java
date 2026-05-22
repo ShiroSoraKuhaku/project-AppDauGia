@@ -30,10 +30,15 @@ public class PlaceBidWorker implements Workable {
     JSONBidTemp req = gson.fromJson(data, JSONBidTemp.class);
     JSONBidTemp ans = new JSONBidTemp();
 
-    // 1. Validate token
+    // 1. Validate token and role
     String username = UserDAO.getUserDao().getUsernameByToken(req.getToken());
-    if (username == null) {
+    String role = UserDAO.getUserDao().getRoleByToken(req.getToken());
+    if (username == null || role == null) {
       ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
+    if (!"Bidder".equalsIgnoreCase(role)) {
+      ans.setResponse("403 Forbidden");
       return gson.toJson(ans);
     }
 

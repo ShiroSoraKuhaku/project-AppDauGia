@@ -19,7 +19,7 @@ public class UserDAO {
   }
 
   public String[] checkLogin(String username, String password) {
-    String sqlCheckCommand = "select * from user where username = ? and password = ?";
+    String sqlCheckCommand = "select role from user where username = ? and password = ?";
     String sqlSetTokenCommand = "insert into tokens (username, token) values (?, ?)";
 
     try (Connection conn =
@@ -33,13 +33,12 @@ public class UserDAO {
         String token = UUID.randomUUID().toString();
         // Set token
         if (resultSet.next()) {
+          String role = resultSet.getString("role");
           PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
           statement2.setString(1, username);
           statement2.setString(2, token);
           if (statement2.executeUpdate() == 1) {
-            //            return token;
-            // TODO: sửa cái này để nó trả về string
-            return new String[] {username, token};
+            return new String[] {username, token, role};
           }
         }
         return null;
@@ -70,13 +69,18 @@ public class UserDAO {
   }
 
   public String signUp(String username, String password) {
-    String sqlAddUser = "insert into user (username, password)" + "values (?, ?)";
+    return signUp(username, password, "Bidder");
+  }
+
+  public String signUp(String username, String password, String role) {
+    String sqlAddUser = "insert into user (username, password, role) values (?, ?, ?)";
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
       PreparedStatement statement1 = conn.prepareStatement(sqlAddUser);
       statement1.setString(1, username);
       statement1.setString(2, password);
+      statement1.setString(3, role);
       int rowAffected = statement1.executeUpdate();
       return "1";
     } catch (SQLException e) {
@@ -101,6 +105,27 @@ public class UserDAO {
       try (ResultSet resultSet = statement.executeQuery()){
         if (resultSet.next()){
           return resultSet.getString("username");
+        }
+        return null;
+      }
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+  }
+
+  public String getRoleByToken(String token) {
+    String sql = "select u.role from user u join tokens t on u.username = t.username where t.token = ?";
+
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
+            );
+         PreparedStatement statement = conn.prepareStatement(sql)){
+      statement.setString(1, token);
+
+      try (ResultSet resultSet = statement.executeQuery()){
+        if (resultSet.next()){
+          return resultSet.getString("role");
         }
         return null;
       }

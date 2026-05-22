@@ -25,6 +25,9 @@ public class LoginWorker implements Workable {
       loggedUser.setResponse("201 Created");
       loggedUser.setToken(token[1]);
       loggedUser.setUsername(token[0]);
+      if (token.length > 2) {
+        loggedUser.setRole(token[2]);
+      }
       answer = gson.toJson(loggedUser);
     }
     return answer;

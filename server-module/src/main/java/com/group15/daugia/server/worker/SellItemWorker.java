@@ -14,9 +14,13 @@ public class SellItemWorker implements Workable {
     JSONItemTemp ans = new JSONItemTemp();
 
     String sellerUsername = UserDAO.getUserDao().getUsernameByToken(item.getToken());
+    String role = UserDAO.getUserDao().getRoleByToken(item.getToken());
 
-    if (sellerUsername == null
-        || item.getName() == null
+    if (sellerUsername == null || role == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (!"Seller".equalsIgnoreCase(role)) {
+      ans.setResponse("403 Forbidden");
+    } else if (item.getName() == null
         || item.getName().isBlank()
         || item.getPrice() <= 0) {
       ans.setResponse("400 Bad Request");

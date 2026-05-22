@@ -4,6 +4,7 @@ public class JSONUserTemp extends JSONTemp {
   private String password;
   private String username;
   private String token;
+  private String role;
 
   public void setUsername(String username) {
     this.username = username;
@@ -17,6 +18,10 @@ public class JSONUserTemp extends JSONTemp {
     this.token = token;
   }
 
+  public void setRole(String role) {
+    this.role = role;
+  }
+
   public String[] getLoginData() {
     return new String[] {username, password};
   }
@@ -27,5 +32,9 @@ public class JSONUserTemp extends JSONTemp {
 
   public String getToken() {
     return token;
+  }
+
+  public String getRole() {
+    return role;
   }
 }

@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
                         `username` varchar(45) NOT NULL,
                         `password` varchar(45) DEFAULT NULL,
+                        `role` enum('Admin','Bidder','Seller') NOT NULL DEFAULT 'Bidder',
                         PRIMARY KEY (`username`),
                         UNIQUE KEY `username_UNIQUE` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
