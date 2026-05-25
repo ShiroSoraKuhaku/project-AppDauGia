@@ -63,7 +63,8 @@ public class PlaceBidWorker implements Workable {
       return gson.toJson(ans);
     }
 
-    boolean usePessimistic = snap.getSecondsRemaining() <= 30;
+    boolean usePessimistic =
+        snap.getSecondsRemaining() <= 30 || dao.hasActiveAutoBids(req.getAuctionId());
     boolean success = dao.placeBidTransactional(
         req.getAuctionId(), username, req.getBidAmount(), snap.getVersion(), usePessimistic);
 

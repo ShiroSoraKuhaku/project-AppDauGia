@@ -8,7 +8,6 @@ import java.util.List;
 
 public class ItemDAO {
   private static ItemDAO instance;
-  private final DBProperty dbProperty = DBProperty.getInstance();
 
   private ItemDAO() {}
 
@@ -22,6 +21,7 @@ public class ItemDAO {
   public String addItem(String sellerUsername, String name, double price, String desc) {
     String sql = "insert into items (seller_username, name, price, `desc`) values (?, ?, ?, ?)";
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                 dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
@@ -42,6 +42,7 @@ public class ItemDAO {
     String sql = "select id, seller_username, name, price, `desc` from items order by id desc";
     List<JSONItemTemp> items = new ArrayList<>();
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                 dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
@@ -67,6 +68,7 @@ public class ItemDAO {
             "select id, seller_username, name, price, `desc` from items where seller_username = ? order by id desc";
     List<JSONItemTemp> items = new ArrayList<>();
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                     dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()

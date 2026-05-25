@@ -203,7 +203,8 @@ public class AuctionDao {
   }
 
   private boolean placeBidPessimistic(int auctionId, String bidderUsername, double bidAmount) {
-    String sqlCheck = "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
+    String sqlCheck =
+        "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
     String sqlUpdate =
         "UPDATE auctions SET cur_price = ?, cur_leader = ?, "
             + "version = version + 1 WHERE id = ?";
@@ -330,7 +331,8 @@ public class AuctionDao {
         dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
   }
 
-  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount) {
+
+  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount){
     if (auctionId <= 0
         || bidderUsername == null
         || bidderUsername.isBlank()
@@ -341,27 +343,25 @@ public class AuctionDao {
 
     String checkSql = "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
 
-    String upsertSql =
-        "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, active) "
-            + "VALUES (?, ?, ?, true) "
-            + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), active = true";
+    String upsertSql = "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, active) " +
+            "VALUES (?, ?, ?, true) " + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), active = true";
 
-    try (Connection conn = getConn()) {
+    try (Connection conn = getConn()){
       conn.setAutoCommit(false);
 
       try {
         double curPrice;
 
-        try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(checkSql)){
           ps.setInt(1, auctionId);
           try (ResultSet rs = ps.executeQuery()) {
-            if (!rs.next()) {
+            if (!rs.next()){
               conn.rollback();
               return "AUCTION_NOT_FOUND";
             }
 
             LocalDateTime end = LocalDateTime.parse(rs.getString("end_time"), FMT);
-            if (!"ACTIVE".equals(rs.getString("status")) || LocalDateTime.now().isAfter(end)) {
+            if (!"ACTIVE".equals(rs.getString("status")) || LocalDateTime.now().isAfter(end)){
               conn.rollback();
               return "AUCTION_NOT_ACTIVE";
             }
@@ -370,12 +370,12 @@ public class AuctionDao {
           }
         }
 
-        if (maxAmount <= curPrice) {
+        if (maxAmount <= curPrice){
           conn.rollback();
           return "PRICE_TOO_LOW";
         }
 
-        try (PreparedStatement ps = conn.prepareStatement(upsertSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(upsertSql)){
           ps.setInt(1, auctionId);
           ps.setString(2, bidderUsername);
           ps.setDouble(3, maxAmount);
@@ -389,15 +389,15 @@ public class AuctionDao {
       } catch (Exception e) {
         conn.rollback();
         throw new RuntimeException(e);
-      } finally {
+      }finally {
         conn.setAutoCommit(true);
       }
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+        throw new RuntimeException(e);
     }
   }
 
-  private static class CurrentAuction {
+  private static class CurrentAuction{
     double curPrice;
     String curLeader;
 
@@ -417,20 +417,6 @@ public class AuctionDao {
     }
   }
 
-  public boolean hasActiveAutoBids(int auctionId) {
-    String sql =
-        "SELECT 1 FROM auction_auto_bids WHERE auction_id = ? AND active = true LIMIT 1";
-    try (Connection conn = getConn();
-        PreparedStatement ps = conn.prepareStatement(sql)) {
-      ps.setInt(1, auctionId);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private CurrentAuction getCurrentAuction(Connection conn, int auctionId) throws SQLException {
     String sql = "SELECT cur_price, cur_leader FROM auctions WHERE id = ? FOR UPDATE";
 
@@ -446,14 +432,14 @@ public class AuctionDao {
   }
 
   private List<AutoBidCandidate> findTopAutoBidCandidates(
-      Connection conn, int auctionId, double minAmount) throws SQLException {
+          Connection conn, int auctionId, double minAmount) throws SQLException {
     String sql =
-        "SELECT bidder_username, max_amount FROM auction_auto_bids "
-            + "WHERE auction_id = ? "
-            + "AND active = true "
-            + "AND max_amount >= ? "
-            + "ORDER BY max_amount DESC, updated_at ASC "
-            + "LIMIT 2";
+            "SELECT bidder_username, max_amount FROM auction_auto_bids "
+                    + "WHERE auction_id = ? "
+                    + "AND active = true "
+                    + "AND max_amount >= ? "
+                    + "ORDER BY max_amount DESC, updated_at ASC "
+                    + "LIMIT 2";
     List<AutoBidCandidate> candidates = new ArrayList<>();
 
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -471,9 +457,9 @@ public class AuctionDao {
   }
 
   private void updateAuctionBid(
-      Connection conn, int auctionId, String bidderUsername, double amount) throws SQLException {
+          Connection conn, int auctionId, String bidderUsername, double amount) throws SQLException {
     String sql =
-        "UPDATE auctions SET cur_price = ?, cur_leader = ?, version = version + 1 WHERE id = ?";
+            "UPDATE auctions SET cur_price = ?, cur_leader = ?, version = version + 1 WHERE id = ?";
 
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setDouble(1, amount);
@@ -486,9 +472,9 @@ public class AuctionDao {
   }
 
   private void insertAuctionBid(
-      Connection conn, int auctionId, String bidderUsername, double amount) throws SQLException {
+          Connection conn, int auctionId, String bidderUsername, double amount) throws SQLException {
     String sql =
-        "INSERT INTO auction_bids (auction_id, bidder_username, bid_amount) VALUES (?, ?, ?)";
+            "INSERT INTO auction_bids (auction_id, bidder_username, bid_amount) VALUES (?, ?, ?)";
 
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setInt(1, auctionId);
@@ -498,7 +484,8 @@ public class AuctionDao {
     }
   }
 
-  private void processAutoBids(Connection conn, int auctionId) throws SQLException {
+
+  private void processAutoBids(Connection conn, int auctionId) throws SQLException{
     CurrentAuction current = getCurrentAuction(conn, auctionId);
     double minNextBid = current.curPrice + BID_INCREMENT;
     List<AutoBidCandidate> candidates = findTopAutoBidCandidates(conn, auctionId, minNextBid);
