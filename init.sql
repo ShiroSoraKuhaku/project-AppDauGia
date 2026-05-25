@@ -118,6 +118,7 @@ CREATE TABLE `auction_auto_bids` (
     `auction_id` int NOT NULL,
     `bidder_username` varchar(45) NOT NULL,
     `max_amount` double NOT NULL,
+    `bid_step` double NOT NULL DEFAULT 1.0,
     `active` boolean NOT NULL DEFAULT true,
     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

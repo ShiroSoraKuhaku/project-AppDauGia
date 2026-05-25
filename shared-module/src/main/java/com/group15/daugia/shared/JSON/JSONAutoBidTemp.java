@@ -7,6 +7,8 @@ public class JSONAutoBidTemp extends JSONTemp{
     private int auctionId;
     private String token;
     private double maxAmount;
+    @SerializedName(value = "bidStep", alternate = {"stepAmount", "increment", "bidIncrement"})
+    private Double bidStep;
 
     private String bidderUsername;
 
@@ -48,5 +50,13 @@ public class JSONAutoBidTemp extends JSONTemp{
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public Double getBidStep() {
+        return bidStep;
+    }
+
+    public void setBidStep(Double bidStep) {
+        this.bidStep = bidStep;
     }
 }
