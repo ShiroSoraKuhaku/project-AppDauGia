@@ -187,4 +187,21 @@ public class AuctionClock {
         scheduler.schedule(() -> onAuctionEnd(auctionId), delay, TimeUnit.SECONDS);
     endJobs.put(auctionId, future);
   }
+
+  // -----------------------------------------------------------------------
+  // Test-only: reset scheduler để tránh state leakage giữa các test
+  // -----------------------------------------------------------------------
+  public void resetForTests() {
+    endJobs.forEach((id, future) -> future.cancel(false));
+    endJobs.clear();
+    scheduler.shutdownNow();
+    // Khởi tạo lại scheduler thông qua reflection để dùng được cho test tiếp theo
+    try {
+      java.lang.reflect.Field f = AuctionClock.class.getDeclaredField("scheduler");
+      f.setAccessible(true);
+      f.set(this, Executors.newScheduledThreadPool(10));
+    } catch (Exception e) {
+      throw new RuntimeException("resetForTests failed", e);
+    }
+  }
 }

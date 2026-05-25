@@ -6,7 +6,6 @@ import java.sql.*;
 import java.util.UUID;
 
 public class UserDAO {
-  DBProperty dbProperty = DBProperty.getInstance();
   private static UserDAO instance;
 
   private UserDAO() {}
@@ -20,8 +19,11 @@ public class UserDAO {
 
   public String[] checkLogin(String username, String password) {
     String sqlCheckCommand = "select * from user where username = ? and password = ?";
-    String sqlSetTokenCommand = "insert into tokens (username, token) values (?, ?)";
+    String sqlSetTokenCommand =
+        "insert into tokens (username, token) values (?, ?) "
+            + "on duplicate key update token = values(token)";
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
@@ -32,17 +34,15 @@ public class UserDAO {
       try (ResultSet resultSet = statement1.executeQuery()) {
         String token = UUID.randomUUID().toString();
         // Set token
-        if (resultSet.next()) {
-          PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
-          statement2.setString(1, username);
-          statement2.setString(2, token);
-          if (statement2.executeUpdate() == 1) {
-            //            return token;
-            // TODO: sửa cái này để nó trả về string
-            return new String[] {username, token};
-          }
+        if (!resultSet.next()) {
+          return null;
         }
-        return null;
+        PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
+        statement2.setString(1, username);
+        statement2.setString(2, token);
+        statement2.executeUpdate();
+        // TODO: sửa cái này để nó trả về string
+        return new String[] {username, token};
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -51,6 +51,7 @@ public class UserDAO {
 
   public String removeLogin(String username, String token) {
     String sqlDeleteToken = "delete from tokens where username = ? and token = ?";
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
@@ -71,6 +72,7 @@ public class UserDAO {
 
   public String signUp(String username, String password) {
     String sqlAddUser = "insert into user (username, password)" + "values (?, ?)";
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
@@ -91,6 +93,7 @@ public class UserDAO {
   public String getUsernameByToken(String token){
     String sql = "select username from tokens where token = ?";
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                     dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()

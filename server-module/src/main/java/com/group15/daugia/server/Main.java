@@ -13,21 +13,12 @@ public class Main {
     // Bootstrap AuctionClock: load và lên lịch tất cả auction SCHEDULED/ACTIVE từ DB
     AuctionClock.getInstance().bootstrap();
 
-    Socket socket;
-    ArrayList<ClientHandler> clients = new ArrayList<>();
-    ExecutorService threadPool = Executors.newFixedThreadPool(10);
-
-    try (ServerSocket serverSocket = new ServerSocket(8080)) {
-      System.out.println("Server on");
-      while (true) {
-        socket = serverSocket.accept();
-        ClientHandler client = new ClientHandler(socket);
-        System.out.println("New Connection");
-        threadPool.execute(client);
-        clients.add(client);
-      }
+    try {
+      AuctionServer server = new AuctionServer(8080);
+      server.start();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      System.out.println("Error in server");
+      e.printStackTrace();
     }
   }
 }
