@@ -1,6 +1,10 @@
 package com.group15.daugia.client.controller;
 
+import com.google.gson.Gson;
+import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
+import com.group15.daugia.shared.JSON.JSONItemListTemp;
+import com.group15.daugia.shared.JSON.JSONItemTemp;
 import com.group15.daugia.shared.model.BaseItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,43 +19,59 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class MenuBidderController implements Initializable {
-  @FXML TableView<BaseItem> table;
-
-  @FXML TableColumn<BaseItem, String> table_name;
-
-  @FXML TableColumn<BaseItem, String> table_description;
-
-  @FXML TableColumn<BaseItem, Double> table_price;
+  @FXML private TableView<BaseItem> table;
+  @FXML private TableColumn<BaseItem, String> table_name;
+  @FXML private TableColumn<BaseItem, String> table_description;
+  @FXML private TableColumn<BaseItem, Double> table_price;
+  @FXML private TableColumn<BaseItem, String> table_start_time;
+  @FXML private TableColumn<BaseItem, String> table_end_time;
 
   private ObservableList<BaseItem> items;
+  private final Gson gson = new Gson();
 
   @Override
   public void initialize(URL url, ResourceBundle resourceBundle) {
-    // 1. Định nghĩa cách đổ dữ liệu từ thuộc tính của BaseItem vào các cột
     table_name.setCellValueFactory(new PropertyValueFactory<>("name"));
     table_description.setCellValueFactory(new PropertyValueFactory<>("description"));
     table_price.setCellValueFactory(new PropertyValueFactory<>("price"));
+    table_start_time.setCellValueFactory(new PropertyValueFactory<>("startTime"));
+    table_end_time.setCellValueFactory(new PropertyValueFactory<>("endTime"));
 
-    // 2. Mock dữ liệu mẫu (Khi kết nối mạng ổn định, bạn dùng ShortConnectNetwork để fetch list rồi ép sang BaseItem)
     items = FXCollections.observableArrayList();
-    // Ví dụ tạo dữ liệu mẫu nếu constructor của bạn hỗ trợ (Nếu lỗi constructor, hãy sửa lại cho đúng thuộc tính)
-    // items.add(new BaseItem("Điện thoại iPhone 15", "Hàng lướt 99%", 20000000.0));
-
     table.setItems(items);
+    loadItems();
 
-    // 3. Sự kiện: Kích đúp chuột vào một dòng trên bảng để vào phòng đấu giá trực tiếp
     table.setRowFactory(tv -> {
       TableRow<BaseItem> row = new TableRow<>();
       row.setOnMouseClicked(event -> {
-        if (event.getClickCount() == 2 && (!row.isEmpty())) {
+        if (event.getClickCount() == 2 && !row.isEmpty()) {
           BaseItem selectedItem = row.getItem();
           System.out.println("Đang vào phòng đấu giá: " + selectedItem.getName());
-
-          // Chuyển sang giao diện đấu giá realtime
           SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
         }
       });
       return row;
     });
+  }
+
+  private void loadItems() {
+    String data = ShortConnectNetwork.shortReq("GET-ITEMS", "{}");
+    JSONItemListTemp answer = gson.fromJson(data, JSONItemListTemp.class);
+
+    items.clear();
+    if (answer == null || answer.getItemList() == null) {
+      return;
+    }
+
+    for (JSONItemTemp item : answer.getItemList()) {
+      items.add(
+          new BaseItem(
+              String.valueOf(item.getId()),
+              item.getName(),
+              item.getPrice(),
+              item.getDesc(),
+              item.getStartTime(),
+              item.getEndTime()));
+    }
   }
 }

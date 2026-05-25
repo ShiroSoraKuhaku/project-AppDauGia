@@ -29,6 +29,38 @@ public class AuctionDao {
     return instance;
   }
 
+  public JSONAuctionTemp createAuction(
+      int itemId, String title, double startPrice, LocalDateTime startTime, LocalDateTime endTime) {
+    String status = startTime.isAfter(LocalDateTime.now()) ? "SCHEDULED" : "ACTIVE";
+    String sql =
+        "INSERT INTO auctions (item_id, title, status, start_price, cur_price, start_time, end_time) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    try (Connection conn = getConn();
+        PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      ps.setInt(1, itemId);
+      ps.setString(2, title);
+      ps.setString(3, status);
+      ps.setDouble(4, startPrice);
+      ps.setDouble(5, startPrice);
+      ps.setString(6, startTime.format(FMT));
+      ps.setString(7, endTime.format(FMT));
+
+      if (ps.executeUpdate() != 1) {
+        return null;
+      }
+
+      try (ResultSet keys = ps.getGeneratedKeys()) {
+        if (!keys.next()) {
+          return null;
+        }
+        return findAuctionById(keys.getInt(1));
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   // -----------------------------------------------------------------------
   // 1. findAuctionById
   // -----------------------------------------------------------------------
@@ -39,6 +71,24 @@ public class AuctionDao {
     try (Connection conn = getConn();
         PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setInt(1, auctionId);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          return mapRow(rs);
+        }
+        return null;
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public JSONAuctionTemp findAuctionByItemId(int itemId) {
+    String sql =
+        "SELECT id, item_id, title, status, start_price, cur_price, cur_leader, "
+            + "start_time, end_time, version FROM auctions WHERE item_id = ?";
+    try (Connection conn = getConn();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, itemId);
       try (ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
           return mapRow(rs);
