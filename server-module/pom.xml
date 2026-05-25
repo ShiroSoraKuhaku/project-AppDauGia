@@ -19,6 +19,28 @@
     </properties>
 
     <dependencies>
+        <!-- Source: https://mvnrepository.com/artifact/org.testcontainers/testcontainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.testcontainers/junit-jupiter -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.testcontainers/mysql -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.group15.daugia.shared</groupId>
             <artifactId>share</artifactId>
@@ -35,10 +57,28 @@
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- SLF4J simple binding để tắt warning "Failed to load StaticLoggerBinder" -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.13</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

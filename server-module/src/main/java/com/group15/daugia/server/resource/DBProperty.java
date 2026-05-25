@@ -10,11 +10,19 @@ public class DBProperty {
   private String password;
 
   private DBProperty() {
-    host = System.getenv().getOrDefault("DB_HOST", "localhost");
-    port = System.getenv().getOrDefault("DB_PORT", "3306");
-    dbName = System.getenv().getOrDefault("DB_NAME", "daugiadb");
-    username = System.getenv().getOrDefault("DB_USERNAME", "root");
-    password = System.getenv().getOrDefault("DB_PASSWORD", "root");
+    host = resolve("DB_HOST", "localhost");
+    port = resolve("DB_PORT", "3306");
+    dbName = resolve("DB_NAME", "daugiadb");
+    username = resolve("DB_USERNAME", "root");
+    password = resolve("DB_PASSWORD", "root");
+  }
+
+  private static String resolve(String key, String defaultValue) {
+    String sysProp = System.getProperty(key);
+    if (sysProp != null && !sysProp.isBlank()) return sysProp;
+    String envVar = System.getenv(key);
+    if (envVar != null && !envVar.isBlank()) return envVar;
+    return defaultValue;
   }
 
   public String getDBUrl() {

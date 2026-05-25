@@ -33,6 +33,7 @@ public class SignUpController implements Initializable {
           userTemp.setPassword(password);
 
           String data = ShortConnectNetwork.shortReq("SIGNUP", gson.toJson(userTemp));
+          System.out.println(data);
           JSONUserTemp answerData = gson.fromJson(data, JSONUserTemp.class);
           if (answerData.getResponse().charAt(0) == '2') {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
