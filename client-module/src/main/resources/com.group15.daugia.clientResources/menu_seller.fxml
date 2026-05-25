@@ -1,15 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="menu-root" stylesheets="@css/base.css, @css/auth.css"
-            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
-    <VBox alignment="CENTER" spacing="14.0" styleClass="menu-card" AnchorPane.bottomAnchor="60.0"
-          AnchorPane.leftAnchor="140.0" AnchorPane.rightAnchor="140.0" AnchorPane.topAnchor="60.0">
-        <Label styleClass="menu-title" text="Menu Người Bán"/>
-        <Label styleClass="menu-subtitle" text="Chọn chức năng bạn muốn thao tác"/>
-        <Button maxWidth="Infinity" mnemonicParsing="false" styleClass="menu-button" text="Lịch sử bán"/>
-        <Button maxWidth="Infinity" mnemonicParsing="false" styleClass="menu-button-secondary" text="Bán đồ"/>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<HBox spacing="15" prefWidth="800" prefHeight="500"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group15.daugia.client.controller.MenuSellerController"
+      stylesheets="@css/menu.css">
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <VBox spacing="10" HBox.hgrow="ALWAYS">
+        <Label text="DANH SÁCH SẢN PHẨM ĐANG ĐẤU GIÁ" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+        <TableView fx:id="tableProducts" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colName" text="Tên sản phẩm" prefWidth="180"/>
+                <TableColumn fx:id="colDesc" text="Mô tả ngắn" prefWidth="180"/>
+                <TableColumn fx:id="colPrice" text="Giá khởi điểm" prefWidth="120"/>
+            </columns>
+        </TableView>
     </VBox>
-</AnchorPane>
+
+    <VBox spacing="12" prefWidth="260" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
+        <Label text="THÔNG TIN SẢN PHẨM" style="-fx-font-weight: bold;"/>
+
+        <Label text="Tên sản phẩm:"/>
+        <TextField fx:id="txtName"/>
+
+        <Label text="Mô tả:"/>
+        <TextField fx:id="txtDesc"/>
+
+        <Label text="Giá sàn:"/>
+        <TextField fx:id="txtPrice"/>
+
+        <Separator/>
+
+        <Button text="Đăng sản phẩm" onAction="#handleAddProduct" maxWidth="Infinity" style="-fx-background-color: #2ed573; -fx-text-fill: white;"/>
+        <Button text="Sửa thông tin" onAction="#handleUpdateProduct" maxWidth="Infinity" style="-fx-background-color: #ffa502; -fx-text-fill: white;"/>
+        <Button text="Hủy đấu giá (Xóa)" onAction="#handleDeleteProduct" maxWidth="Infinity" style="-fx-background-color: #ff4757; -fx-text-fill: white;"/>
+
+    </VBox>
+</HBox>

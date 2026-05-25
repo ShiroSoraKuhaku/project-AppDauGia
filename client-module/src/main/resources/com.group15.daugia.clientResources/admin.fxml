@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="TOP_LEFT" spacing="14.0" style="-fx-background-color: #f4f7f6;"
+      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets top="24.0" right="24.0" bottom="24.0" left="24.0"/>
+    </padding>
+    <Label text="Bảng quản trị" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2f3542;"/>
+    <Label text="Khu vực chức năng quản trị" style="-fx-font-size: 14px; -fx-text-fill: #57606f;"/>
+    <Separator/>
+    <Label text="Chỉ tài khoản quản trị viên mới thấy được nút này." style="-fx-text-fill: #2f3542;"/>
+</VBox>

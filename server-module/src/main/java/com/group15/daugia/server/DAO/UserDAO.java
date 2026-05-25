@@ -20,7 +20,9 @@ public class UserDAO {
 
   public String[] checkLogin(String username, String password) {
     String sqlCheckCommand = "select * from user where username = ? and password = ?";
-    String sqlSetTokenCommand = "insert into tokens (username, token) values (?, ?)";
+    String sqlSetTokenCommand =
+        "insert into tokens (username, token) values (?, ?) "
+            + "on duplicate key update token = values(token)";
 
     try (Connection conn =
         DriverManager.getConnection(
@@ -36,10 +38,16 @@ public class UserDAO {
           PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
           statement2.setString(1, username);
           statement2.setString(2, token);
-          if (statement2.executeUpdate() == 1) {
+          if (statement2.executeUpdate() > 0) {
             //            return token;
             // TODO: sửa cái này để nó trả về string
-            return new String[] {username, token};
+            String role;
+            try {
+              role = resultSet.getString("role");
+            } catch (SQLException ignored) {
+              role = "admin".equalsIgnoreCase(username) ? "ADMIN" : "USER";
+            }
+            return new String[] {username, token, role};
           }
         }
         return null;

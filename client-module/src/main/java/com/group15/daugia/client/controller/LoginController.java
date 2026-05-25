@@ -46,18 +46,27 @@ public class LoginController implements Initializable {
           System.out.println(answer);
           // JSONUserTemp afterLoginData = (JSONUserTemp) answer;
           JSONUserTemp afterLoginData = gson.fromJson(answer, JSONUserTemp.class);
-          if (afterLoginData.getResponse().charAt(0) == '4') {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle(afterLoginData.getResponse());
-            alert.setHeaderText("Cannot Login");
-            alert.setContentText("Username or Password is wrong");
-            alert.showAndWait();
-          } else {
-            MenuBidderController nextController =
-                SceneChanger.changeTo("com.group15.daugia.clientResources/menu_seller.fxml");
+            // Thêm điều kiện kiểm tra null
+            if (afterLoginData == null || afterLoginData.getResponse() == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Lỗi");
+                alert.setHeaderText("Phản hồi từ máy chủ không hợp lệ");
+                alert.setContentText("Dữ liệu nhận về bị trống hoặc sai định dạng.");
+                alert.showAndWait();
+            } else if (afterLoginData.getResponse().charAt(0) == '4') {
+                // Logic xử lý lỗi đăng nhập (4xx)
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Đăng nhập thất bại");
+                alert.setHeaderText("Không thể đăng nhập");
+                alert.setContentText("Tên đăng nhập hoặc mật khẩu không đúng");
+                alert.showAndWait();
+            } else {
+                // Logic đăng nhập thành công
             User.setUsername(username);
             SessionManager.setToken(afterLoginData.getToken());
+            SessionManager.setRole(afterLoginData.getRole());
             System.out.println(SessionManager.getToken());
+            SceneChanger.changeTo("com.group15.daugia.clientResources/dashboard.fxml");
           }
         });
     signup.setOnMouseClicked(

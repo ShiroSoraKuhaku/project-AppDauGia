@@ -9,9 +9,9 @@
     <center>
         <TableView fx:id="table" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <columns>
-                <TableColumn fx:id="table_name" prefWidth="75.0" text="Name"/>
-                <TableColumn fx:id="table_price" prefWidth="75.0" text="Price"/>
-                <TableColumn fx:id="table_description" prefWidth="75.0" text="Description"/>
+                <TableColumn fx:id="table_name" prefWidth="75.0" text="Tên sản phẩm"/>
+                <TableColumn fx:id="table_price" prefWidth="75.0" text="Giá"/>
+                <TableColumn fx:id="table_description" prefWidth="75.0" text="Mô tả"/>
             </columns>
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>

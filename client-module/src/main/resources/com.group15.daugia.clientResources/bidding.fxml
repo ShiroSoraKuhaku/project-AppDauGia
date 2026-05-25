@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+
+<VBox spacing="15" alignment="TOP_CENTER" prefWidth="600" prefHeight="500"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group15.daugia.client.controller.BiddingController"
+      stylesheets="@css/base.css">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="PHÒNG ĐẤU GIÁ TRỰC TIẾP" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+    <GridPane hgap="10" vgap="10" alignment="CENTER" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 5;">
+        <columnConstraints>
+            <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+            <ColumnConstraints halignment="LEFT" minWidth="250"/>
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="30"/>
+            <RowConstraints minHeight="30"/>
+        </rowConstraints>
+
+        <Label text="Sản phẩm:" style="-fx-font-weight: bold;"/>
+        <Label fx:id="lblProductName" text="Đang tải..." GridPane.columnIndex="1"/>
+
+        <Label text="Giá hiện tại:" style="-fx-font-weight: bold;" GridPane.rowIndex="1"/>
+        <Label fx:id="lblCurrentPrice" text="0 VNĐ" style="-fx-text-fill: #e74c3c; -fx-font-size: 16px; -fx-font-weight: bold;" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Label text="Nhập giá của bạn:"/>
+        <TextField fx:id="txtYourBid" promptText="Nhập số tiền..."/>
+        <Button fx:id="btnPlaceBid" text="Đặt giá" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <VBox spacing="5" VBox.vgrow="ALWAYS">
+        <Label text="Lịch sử trả giá:" style="-fx-font-weight: bold;"/>
+        <ListView fx:id="bidHistoryList" VBox.vgrow="ALWAYS"/>
+    </VBox>
+
+    <Button text="Thoát phòng" onAction="#handleBack" style="-fx-background-color: #95a5a6; -fx-text-fill: white;"/>
+</VBox>
