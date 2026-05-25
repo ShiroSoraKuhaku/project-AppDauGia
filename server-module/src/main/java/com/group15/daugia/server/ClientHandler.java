@@ -1,5 +1,8 @@
 package com.group15.daugia.server;
 
+import com.google.gson.Gson;
+import com.group15.daugia.shared.JSON.JSONUserTemp;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -70,7 +73,14 @@ public class ClientHandler implements Runnable {
       }
 
       // --- Short-lived request/response ---
-      out.println(job.work(data));
+      try {
+        out.println(job.work(data));
+      } catch (RuntimeException e) {
+        e.printStackTrace();
+        JSONUserTemp error = new JSONUserTemp();
+        error.setResponse("500 Server Error");
+        out.println(new Gson().toJson(error));
+      }
 
     } catch (IOException e) {
       throw new RuntimeException(e);

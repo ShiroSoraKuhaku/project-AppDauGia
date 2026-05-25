@@ -13,6 +13,8 @@ public class Work {
     works.put("RM-TOKEN", new LogoutWorker());
     works.put("SIGNUP", new SignupWorker());
     works.put("SELL-ITEM", new SellItemWorker());
+    works.put("UPDATE-ITEM", new UpdateItemWorker());
+    works.put("DELETE-ITEM", new DeleteItemWorker());
     works.put("GET-ITEMS", new GetItemsWorker());
     works.put("GET-MY-ITEMS", new GetMyItemsWorker());
     // Auction workers

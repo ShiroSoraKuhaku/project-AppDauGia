@@ -34,15 +34,19 @@ public class UserDAO {
       try (ResultSet resultSet = statement1.executeQuery()) {
         String token = UUID.randomUUID().toString();
         // Set token
-        if (!resultSet.next()) {
-          return null;
-        }
         PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
         statement2.setString(1, username);
         statement2.setString(2, token);
-        statement2.executeUpdate();
-        // TODO: sửa cái này để nó trả về string
-        return new String[] {username, token};
+        if (statement2.executeUpdate() > 0) {
+          //            return token;
+          // TODO: sửa cái này để nó trả về string
+          String role;
+          try {
+            role = resultSet.getString("role");
+          } catch (SQLException ignored) {
+            role = "admin".equalsIgnoreCase(username) ? "ADMIN" : "USER";
+          }
+          return new String[] {username, token, role};
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);

@@ -32,9 +32,13 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
     `username` varchar(45) NOT NULL,
     `password` varchar(45) DEFAULT NULL,
+    `role` enum('USER','ADMIN') NOT NULL DEFAULT 'USER',
     PRIMARY KEY (`username`),
     UNIQUE KEY `username_UNIQUE` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `user` (`username`, `password`, `role`)
+VALUES ('admin', 'admin', 'ADMIN');
 
 CREATE TABLE `items` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -114,6 +118,7 @@ CREATE TABLE `auction_auto_bids` (
     `auction_id` int NOT NULL,
     `bidder_username` varchar(45) NOT NULL,
     `max_amount` double NOT NULL,
+    `bid_step` double NOT NULL DEFAULT 1.0,
     `active` boolean NOT NULL DEFAULT true,
     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

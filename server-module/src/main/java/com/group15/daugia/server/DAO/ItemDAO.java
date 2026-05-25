@@ -38,6 +38,44 @@ public class ItemDAO {
     }
   }
 
+  public String updateItem(int id, String sellerUsername, String name, double price, String desc) {
+    String sql =
+        "update items set name = ?, price = ?, `desc` = ? where id = ? and seller_username = ?";
+
+    try (Connection conn =
+            DriverManager.getConnection(
+                dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement = conn.prepareStatement(sql)) {
+
+      statement.setString(1, name);
+      statement.setDouble(2, price);
+      statement.setString(3, desc);
+      statement.setInt(4, id);
+      statement.setString(5, sellerUsername);
+
+      return statement.executeUpdate() == 1 ? "1" : "0";
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String deleteItem(int id, String sellerUsername) {
+    String sql = "delete from items where id = ? and seller_username = ?";
+
+    try (Connection conn =
+            DriverManager.getConnection(
+                dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement = conn.prepareStatement(sql)) {
+
+      statement.setInt(1, id);
+      statement.setString(2, sellerUsername);
+
+      return statement.executeUpdate() == 1 ? "1" : "0";
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<JSONItemTemp> getAllItems() {
     String sql = "select id, seller_username, name, price, `desc` from items order by id desc";
     List<JSONItemTemp> items = new ArrayList<>();

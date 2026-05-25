@@ -17,22 +17,16 @@ public class SignUpController implements Initializable {
 
   @FXML private PasswordField password_in;
 
-  @FXML private ChoiceBox<String> signup_role;
-
   @FXML private Button ok;
 
   @FXML private Label login;
 
   @Override
   public void initialize(URL url, ResourceBundle resourceBundle) {
-    String[] roles = new String[] {"Admin", "Bidder", "Seller"};
-    signup_role.getItems().addAll(roles);
-
     ok.setOnAction(
         actionEvent -> {
           String username = username_in.getText();
           String password = password_in.getText();
-          String role = signup_role.getValue();
           Gson gson = new Gson();
           JSONUserTemp userTemp = new JSONUserTemp();
           userTemp.setUsername(username);
@@ -43,16 +37,16 @@ public class SignUpController implements Initializable {
           JSONUserTemp answerData = gson.fromJson(data, JSONUserTemp.class);
           if (answerData.getResponse().charAt(0) == '2') {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Success");
-            alert.setHeaderText("You successfully registed a new account");
-            alert.setContentText("Please login on the login screen");
+            alert.setTitle("Thành công");
+            alert.setHeaderText("Bạn đã đăng ký tài khoản thành công");
+            alert.setContentText("Vui lòng đăng nhập ở màn hình đăng nhập");
             alert.showAndWait();
             SceneChanger.changeTo("com.group15.daugia.clientResources/login.fxml");
           } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle(answerData.getResponse());
-            alert.setHeaderText("You account or password has already been used");
-            alert.setContentText("Try again");
+            alert.setTitle("Đăng ký thất bại");
+            alert.setHeaderText("Tên đăng nhập hoặc mật khẩu đã được sử dụng");
+            alert.setContentText("Vui lòng thử lại");
             alert.showAndWait();
           }
         });
