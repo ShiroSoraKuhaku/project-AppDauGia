@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<HBox spacing="15" prefWidth="800" prefHeight="500"
+<?import javafx.scene.layout.*?>
+
+<HBox spacing="15" prefWidth="980" prefHeight="540"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.group15.daugia.client.controller.MenuSellerController"
       stylesheets="@css/menu.css">
@@ -16,14 +16,16 @@
         <Label text="DANH SÁCH SẢN PHẨM ĐANG ĐẤU GIÁ" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
         <TableView fx:id="tableProducts" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="colName" text="Tên sản phẩm" prefWidth="180"/>
+                <TableColumn fx:id="colName" text="Tên sản phẩm" prefWidth="170"/>
                 <TableColumn fx:id="colDesc" text="Mô tả ngắn" prefWidth="180"/>
-                <TableColumn fx:id="colPrice" text="Giá khởi điểm" prefWidth="120"/>
+                <TableColumn fx:id="colPrice" text="Giá khởi điểm" prefWidth="110"/>
+                <TableColumn fx:id="colStartTime" text="Bắt đầu" prefWidth="150"/>
+                <TableColumn fx:id="colEndTime" text="Kết thúc" prefWidth="150"/>
             </columns>
         </TableView>
     </VBox>
 
-    <VBox spacing="12" prefWidth="260" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
+    <VBox spacing="10" prefWidth="280" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
         <Label text="THÔNG TIN SẢN PHẨM" style="-fx-font-weight: bold;"/>
 
         <Label text="Tên sản phẩm:"/>
@@ -35,11 +37,16 @@
         <Label text="Giá sàn:"/>
         <TextField fx:id="txtPrice"/>
 
+        <Label text="Thời gian bắt đầu:"/>
+        <TextField fx:id="txtStartTime" promptText="yyyy-MM-dd HH:mm:ss"/>
+
+        <Label text="Thời gian kết thúc:"/>
+        <TextField fx:id="txtEndTime" promptText="yyyy-MM-dd HH:mm:ss"/>
+
         <Separator/>
 
         <Button text="Đăng sản phẩm" onAction="#handleAddProduct" maxWidth="Infinity" style="-fx-background-color: #2ed573; -fx-text-fill: white;"/>
         <Button text="Sửa thông tin" onAction="#handleUpdateProduct" maxWidth="Infinity" style="-fx-background-color: #ffa502; -fx-text-fill: white;"/>
         <Button text="Hủy đấu giá (Xóa)" onAction="#handleDeleteProduct" maxWidth="Infinity" style="-fx-background-color: #ff4757; -fx-text-fill: white;"/>
-
     </VBox>
 </HBox>

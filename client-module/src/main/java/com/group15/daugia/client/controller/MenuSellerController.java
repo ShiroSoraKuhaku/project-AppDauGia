@@ -18,6 +18,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 
 public class MenuSellerController implements Initializable {
@@ -26,19 +29,26 @@ public class MenuSellerController implements Initializable {
     @FXML private TableColumn<BaseItem, String> colName;
     @FXML private TableColumn<BaseItem, String> colDesc;
     @FXML private TableColumn<BaseItem, Double> colPrice;
+    @FXML private TableColumn<BaseItem, String> colStartTime;
+    @FXML private TableColumn<BaseItem, String> colEndTime;
 
     @FXML private TextField txtName;
     @FXML private TextField txtDesc;
     @FXML private TextField txtPrice;
+    @FXML private TextField txtStartTime;
+    @FXML private TextField txtEndTime;
 
     private ObservableList<BaseItem> productList;
     private final Gson gson = new Gson();
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colStartTime.setCellValueFactory(new PropertyValueFactory<>("startTime"));
+        colEndTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
 
         productList = FXCollections.observableArrayList();
         tableProducts.setItems(productList);
@@ -49,6 +59,8 @@ public class MenuSellerController implements Initializable {
                 txtName.setText(newSelection.getName());
                 txtDesc.setText(newSelection.getDescription());
                 txtPrice.setText(String.valueOf(newSelection.getPrice()));
+                txtStartTime.setText(newSelection.getStartTime());
+                txtEndTime.setText(newSelection.getEndTime());
             }
         });
     }
@@ -58,8 +70,10 @@ public class MenuSellerController implements Initializable {
         String name = txtName.getText().trim();
         String desc = txtDesc.getText().trim();
         Double price = parsePrice();
+        String startTime = txtStartTime.getText().trim();
+        String endTime = txtEndTime.getText().trim();
 
-        if (price == null || !validateProductInput(name, price)) {
+        if (price == null || !validateProductInput(name, price) || !validateAuctionTime(startTime, endTime)) {
             return;
         }
 
@@ -68,6 +82,8 @@ public class MenuSellerController implements Initializable {
         item.setName(name);
         item.setDesc(desc);
         item.setPrice(price);
+        item.setStartTime(startTime);
+        item.setEndTime(endTime);
 
         String data = ShortConnectNetwork.shortReq("SELL-ITEM", gson.toJson(item));
         JSONItemTemp answer = parseItemResponse(data, "Đăng sản phẩm thất bại");
@@ -95,8 +111,10 @@ public class MenuSellerController implements Initializable {
         String name = txtName.getText().trim();
         String desc = txtDesc.getText().trim();
         Double price = parsePrice();
+        String startTime = txtStartTime.getText().trim();
+        String endTime = txtEndTime.getText().trim();
 
-        if (price == null || !validateProductInput(name, price)) {
+        if (price == null || !validateProductInput(name, price) || !validateAuctionTime(startTime, endTime)) {
             return;
         }
 
@@ -106,6 +124,8 @@ public class MenuSellerController implements Initializable {
         item.setName(name);
         item.setDesc(desc);
         item.setPrice(price);
+        item.setStartTime(startTime);
+        item.setEndTime(endTime);
 
         String data = ShortConnectNetwork.shortReq("UPDATE-ITEM", gson.toJson(item));
         JSONItemTemp answer = parseItemResponse(data, "Sửa sản phẩm thất bại");
@@ -176,7 +196,9 @@ public class MenuSellerController implements Initializable {
                             String.valueOf(item.getId()),
                             item.getName(),
                             item.getPrice(),
-                            item.getDesc()));
+                            item.getDesc(),
+                            item.getStartTime(),
+                            item.getEndTime()));
         }
     }
 
@@ -197,6 +219,21 @@ public class MenuSellerController implements Initializable {
         return true;
     }
 
+    private boolean validateAuctionTime(String startTime, String endTime) {
+        try {
+            LocalDateTime start = LocalDateTime.parse(startTime, TIME_FORMATTER);
+            LocalDateTime end = LocalDateTime.parse(endTime, TIME_FORMATTER);
+            if (!end.isAfter(start)) {
+                showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Thời gian kết thúc phải sau thời gian bắt đầu.");
+                return false;
+            }
+            return true;
+        } catch (DateTimeParseException e) {
+            showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Thời gian phải theo định dạng yyyy-MM-dd HH:mm:ss.");
+            return false;
+        }
+    }
+
     private JSONItemTemp parseItemResponse(String data, String title) {
         try {
             return gson.fromJson(data, JSONItemTemp.class);
@@ -214,6 +251,8 @@ public class MenuSellerController implements Initializable {
         txtName.clear();
         txtDesc.clear();
         txtPrice.clear();
+        txtStartTime.clear();
+        txtEndTime.clear();
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

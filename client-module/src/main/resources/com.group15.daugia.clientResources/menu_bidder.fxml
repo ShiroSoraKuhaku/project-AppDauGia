@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
-            prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.group15.daugia.client.controller.MenuBidderController">
-    <center>
-        <TableView fx:id="table" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-            <columns>
-                <TableColumn fx:id="table_name" prefWidth="75.0" text="Tên sản phẩm"/>
-                <TableColumn fx:id="table_price" prefWidth="75.0" text="Giá"/>
-                <TableColumn fx:id="table_description" prefWidth="75.0" text="Mô tả"/>
-            </columns>
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-            </columnResizePolicy>
-        </TableView>
-    </center>
-</BorderPane>
+<VBox spacing="10" prefWidth="980" prefHeight="540"
+      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.group15.daugia.client.controller.MenuBidderController"
+      stylesheets="@css/menu.css">
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <Label text="DANH SÁCH SẢN PHẨM ĐẤU GIÁ" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="table_name" text="Tên sản phẩm" prefWidth="170"/>
+            <TableColumn fx:id="table_description" text="Mô tả ngắn" prefWidth="180"/>
+            <TableColumn fx:id="table_price" text="Giá khởi điểm" prefWidth="110"/>
+            <TableColumn fx:id="table_start_time" text="Bắt đầu" prefWidth="150"/>
+            <TableColumn fx:id="table_end_time" text="Kết thúc" prefWidth="150"/>
+        </columns>
+    </TableView>
+</VBox>
