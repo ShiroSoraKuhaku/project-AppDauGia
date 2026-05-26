@@ -45,13 +45,20 @@ public class ItemDAO {
   }
 
   public String updateItem(
-      int id, String sellerUsername, String name, double price, String desc, String startTime, String endTime) {
+      int id,
+      String sellerUsername,
+      String name,
+      double price,
+      String desc,
+      String startTime,
+      String endTime) {
     String itemSql =
         "update items set name = ?, price = ?, `desc` = ? where id = ? and seller_username = ?";
     String auctionSql =
         "update auctions set title = ?, start_price = ?, start_time = ?, end_time = ?, "
             + "version = version + 1 where item_id = ?";
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
@@ -90,6 +97,7 @@ public class ItemDAO {
     String deleteAuctionsSql = "delete from auctions where item_id = ?";
     String deleteItemSql = "delete from items where id = ? and seller_username = ?";
 
+    DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
             dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
@@ -146,24 +154,23 @@ public class ItemDAO {
     }
   }
 
-  public List<JSONItemTemp> getItemsBySeller(String sellerUsername){
+  public List<JSONItemTemp> getItemsBySeller(String sellerUsername) {
     String sql =
-            "select i.id, i.seller_username, i.name, i.price, i.`desc`, a.start_time, a.end_time "
-                    + "from items i left join auctions a on a.item_id = i.id "
-                    + "where i.seller_username = ? order by i.id desc";
+        "select i.id, i.seller_username, i.name, i.price, i.`desc`, a.start_time, a.end_time "
+            + "from items i left join auctions a on a.item_id = i.id "
+            + "where i.seller_username = ? order by i.id desc";
     List<JSONItemTemp> items = new ArrayList<>();
 
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
-                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
-            );
-         PreparedStatement statement = conn.prepareStatement(sql)){
+                dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement = conn.prepareStatement(sql)) {
 
       statement.setString(1, sellerUsername);
 
-      try (ResultSet resultSet = statement.executeQuery()){
-        while (resultSet.next()){
+      try (ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
           JSONItemTemp item = new JSONItemTemp();
           item.setId(resultSet.getInt("id"));
           item.setSellerUsername(resultSet.getString("seller_username"));
@@ -178,8 +185,7 @@ public class ItemDAO {
 
       return items;
     } catch (SQLException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
-
 }

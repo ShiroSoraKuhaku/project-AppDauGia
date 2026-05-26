@@ -24,8 +24,20 @@ public class SellItemWorker implements Workable {
 
     String sellerUsername = UserDAO.getUserDao().getUsernameByToken(item.getToken());
 
-    LocalDateTime startTime = parseTime(item.getStartTime());
-    LocalDateTime endTime = parseTime(item.getEndTime());
+    String startRaw = item.getStartTime();
+    String endRaw = item.getEndTime();
+    boolean startMissing = startRaw == null || startRaw.isBlank();
+    boolean endMissing = endRaw == null || endRaw.isBlank();
+    LocalDateTime startTime = parseTime(startRaw);
+    LocalDateTime endTime = parseTime(endRaw);
+    if (startMissing && endMissing) {
+      startTime = LocalDateTime.now();
+      endTime = startTime.plusHours(1);
+    } else if (startMissing && endTime != null) {
+      startTime = LocalDateTime.now();
+    } else if (endMissing && startTime != null) {
+      endTime = startTime.plusHours(1);
+    }
 
     if (sellerUsername == null
         || item.getName() == null
