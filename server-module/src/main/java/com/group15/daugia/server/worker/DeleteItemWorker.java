@@ -20,7 +20,9 @@ public class DeleteItemWorker implements Workable {
 
     String sellerUsername = UserDAO.getUserDao().getUsernameByToken(item.getToken());
 
-    if (sellerUsername == null || item.getId() <= 0) {
+    if (sellerUsername == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (item.getId() <= 0) {
       ans.setResponse("400 Bad Request");
     } else {
       String result = ItemDAO.getItemDao().deleteItem(item.getId(), sellerUsername);

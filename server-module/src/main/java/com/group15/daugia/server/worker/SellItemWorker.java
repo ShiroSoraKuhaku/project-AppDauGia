@@ -39,8 +39,9 @@ public class SellItemWorker implements Workable {
       endTime = startTime.plusHours(1);
     }
 
-    if (sellerUsername == null
-        || item.getName() == null
+    if (sellerUsername == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (item.getName() == null
         || item.getName().isBlank()
         || item.getPrice() <= 0
         || startTime == null

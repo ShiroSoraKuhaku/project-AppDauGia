@@ -14,9 +14,24 @@ public class LogoutWorker implements Workable {
 
     JSONUserTemp userTemp = gson.fromJson(data, JSONUserTemp.class);
     JSONUserTemp ans = new JSONUserTemp();
-    ans.setResponse("204 No Content");
+    if (userTemp == null
+        || userTemp.getUsername() == null
+        || userTemp.getUsername().isBlank()
+        || userTemp.getToken() == null
+        || userTemp.getToken().isBlank()) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
+
+    String tokenUsername = checkAcc.getUsernameByToken(userTemp.getToken());
+    if (tokenUsername == null || !tokenUsername.equals(userTemp.getUsername())) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
+
     String[] userData = userTemp.getAfterLoginData();
-    checkAcc.removeLogin(userData[0], userData[1]);
+    String removed = checkAcc.removeLogin(userData[0], userData[1]);
+    ans.setResponse("1".equals(removed) ? "204 No Content" : "401 Unauthorized");
     return gson.toJson(ans);
   }
 }

@@ -30,6 +30,7 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
     `username` varchar(45) NOT NULL,
     `password` varchar(45) DEFAULT NULL,
+    `role` enum('USER','ADMIN') NOT NULL DEFAULT 'USER',
     `balance` double NOT NULL DEFAULT 0,
     `locked_balance` double NOT NULL DEFAULT 0,
     PRIMARY KEY (`username`),

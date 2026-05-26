@@ -23,7 +23,7 @@ public class GetMyItemsWorker implements Workable {
         }
 
         if(request == null || request.getToken() == null || request.getToken().isBlank()){
-            ans.setResponse("400 Bad Request");
+            ans.setResponse("401 Unauthorized");
             return gson.toJson(ans);
         }
 

@@ -21,6 +21,11 @@ public class UnwatchAuctionWorker implements Workable {
     JSONAuctionTemp req = gson.fromJson(data, JSONAuctionTemp.class);
     JSONAuctionTemp ans = new JSONAuctionTemp();
 
+    if (req == null || req.getToken() == null || req.getToken().isBlank()) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
+
     String username = UserDAO.getUserDao().getUsernameByToken(req.getToken());
     if (username == null) {
       ans.setResponse("401 Unauthorized");

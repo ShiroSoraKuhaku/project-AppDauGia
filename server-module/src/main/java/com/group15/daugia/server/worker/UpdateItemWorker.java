@@ -31,8 +31,9 @@ public class UpdateItemWorker implements Workable {
     LocalDateTime startTime = parseTime(item.getStartTime());
     LocalDateTime endTime = parseTime(item.getEndTime());
 
-    if (sellerUsername == null
-        || item.getId() <= 0
+    if (sellerUsername == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (item.getId() <= 0
         || item.getName() == null
         || item.getName().isBlank()
         || item.getPrice() <= 0
