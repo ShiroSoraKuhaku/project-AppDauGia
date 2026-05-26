@@ -1,6 +1,7 @@
 package com.group15.daugia.client.controller;
 
 import com.google.gson.Gson;
+import com.group15.daugia.client.model.User;
 import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.shared.JSON.JSONItemListTemp;
@@ -41,20 +42,24 @@ public class MenuBidderController implements Initializable {
     table.setItems(items);
     loadItems();
 
-    table.setRowFactory(tv -> {
-      TableRow<BaseItem> row = new TableRow<>();
-      row.setOnMouseClicked(event -> {
-        if (event.getClickCount() == 2 && !row.isEmpty()) {
-          BaseItem selectedItem = row.getItem();
-          System.out.println("Đang vào phòng đấu giá: " + selectedItem.getName());
-          SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
-        }
-      });
-      return row;
-    });
+    table.setRowFactory(
+        tv -> {
+          TableRow<BaseItem> row = new TableRow<>();
+          row.setOnMouseClicked(
+              event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                  BaseItem selectedItem = row.getItem();
+                  System.out.println("Đang vào phòng đấu giá: " + selectedItem.getName());
+                  SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
+                }
+              });
+          return row;
+        });
   }
 
   private void loadItems() {
+    String user = User.getUsername();
+
     String data = ShortConnectNetwork.shortReq("GET-ITEMS", "{}");
     JSONItemListTemp answer = gson.fromJson(data, JSONItemListTemp.class);
 

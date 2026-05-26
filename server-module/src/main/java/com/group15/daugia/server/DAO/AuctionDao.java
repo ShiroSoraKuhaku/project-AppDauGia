@@ -381,21 +381,21 @@ public class AuctionDao {
   }
 
 
-  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount, double bidStep){
+  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount) {
     if (auctionId <= 0
         || bidderUsername == null
         || bidderUsername.isBlank()
         || !Double.isFinite(maxAmount)
-        || maxAmount <= 0
-        || !Double.isFinite(bidStep)
-        || bidStep <= 0) {
+        || maxAmount <= 0) {
       return "INVALID_INPUT";
     }
 
     String checkSql = "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
 
-    String upsertSql = "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, bid_step, active) " +
-            "VALUES (?, ?, ?, ?, true) " + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), bid_step = VALUES(bid_step), active = true";
+    String upsertSql =
+        "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, active) "
+            + "VALUES (?, ?, ?, true) "
+            + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), active = true";
 
     try (Connection conn = getConn()) {
       conn.setAutoCommit(false);
@@ -421,7 +421,7 @@ public class AuctionDao {
           }
         }
 
-        if (maxAmount < curPrice + bidStep){
+        if (maxAmount <= curPrice) {
           conn.rollback();
           return "PRICE_TOO_LOW";
         }
@@ -430,7 +430,6 @@ public class AuctionDao {
           ps.setInt(1, auctionId);
           ps.setString(2, bidderUsername);
           ps.setDouble(3, maxAmount);
-          ps.setDouble(4, bidStep);
           ps.executeUpdate();
         }
 
@@ -462,12 +461,10 @@ public class AuctionDao {
   private static class AutoBidCandidate {
     String username;
     double maxAmount;
-    double bidStep;
 
-    AutoBidCandidate(String username, double maxAmount, double bidStep) {
+    AutoBidCandidate(String username, double maxAmount) {
       this.username = username;
       this.maxAmount = maxAmount;
-      this.bidStep = bidStep;
     }
   }
 
@@ -500,14 +497,14 @@ public class AuctionDao {
   }
 
   private List<AutoBidCandidate> findTopAutoBidCandidates(
-          Connection conn, int auctionId, double currentPrice) throws SQLException {
+      Connection conn, int auctionId, double currentPrice) throws SQLException {
     String sql =
-            "SELECT bidder_username, max_amount, bid_step FROM auction_auto_bids "
-                    + "WHERE auction_id = ? "
-                    + "AND active = true "
-                    + "AND max_amount >= (? + bid_step) "
-                    + "ORDER BY max_amount DESC, updated_at ASC "
-                    + "LIMIT 2";
+        "SELECT bidder_username, max_amount FROM auction_auto_bids "
+            + "WHERE auction_id = ? "
+            + "AND active = true "
+            + "AND max_amount >= ? "
+            + "ORDER BY max_amount DESC, updated_at ASC "
+            + "LIMIT 2";
     List<AutoBidCandidate> candidates = new ArrayList<>();
 
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -516,13 +513,9 @@ public class AuctionDao {
 
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) {
-          double step = rs.getDouble("bid_step");
-          if (!Double.isFinite(step) || step <= 0) {
-            step = DEFAULT_BID_STEP;
-          }
           candidates.add(
               new AutoBidCandidate(
-                  rs.getString("bidder_username"), rs.getDouble("max_amount"), step));
+                  rs.getString("bidder_username"), rs.getDouble("max_amount")));
         }
       }
     }
@@ -570,9 +563,9 @@ public class AuctionDao {
       return;
     }
 
-    double minNextBid = current.curPrice + winner.bidStep;
+    double minNextBid = current.curPrice + DEFAULT_BID_STEP;
     double secondLimit = candidates.size() > 1 ? candidates.get(1).maxAmount : current.curPrice;
-    double targetAmount = Math.max(minNextBid, secondLimit + winner.bidStep);
+    double targetAmount = Math.max(minNextBid, secondLimit + DEFAULT_BID_STEP);
     double bidAmount = Math.min(winner.maxAmount, targetAmount);
 
     if (bidAmount <= current.curPrice) {

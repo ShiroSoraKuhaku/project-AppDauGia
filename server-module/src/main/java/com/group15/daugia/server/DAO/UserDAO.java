@@ -18,7 +18,7 @@ public class UserDAO {
   }
 
   public String[] checkLogin(String username, String password) {
-    String sqlCheckCommand = "select * from user where username = ? and password = ?";
+    String sqlCheckCommand = "select username from user where username = ? and password = ?";
     String sqlSetTokenCommand =
         "insert into tokens (username, token) values (?, ?) "
             + "on duplicate key update token = values(token)";
@@ -26,27 +26,32 @@ public class UserDAO {
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
         DriverManager.getConnection(
-            dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
-      PreparedStatement statement1 = conn.prepareStatement(sqlCheckCommand);
+            dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement1 = conn.prepareStatement(sqlCheckCommand)) {
       statement1.setString(1, username);
       statement1.setString(2, password);
 
       try (ResultSet resultSet = statement1.executeQuery()) {
+        if (!resultSet.next()) {
+          return null;
+        }
+
         String token = UUID.randomUUID().toString();
         // Set token
-        PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand);
-        statement2.setString(1, username);
-        statement2.setString(2, token);
-        if (statement2.executeUpdate() > 0) {
-          //            return token;
-          // TODO: sửa cái này để nó trả về string
-          String role;
-          try {
-            role = resultSet.getString("role");
-          } catch (SQLException ignored) {
-            role = "admin".equalsIgnoreCase(username) ? "ADMIN" : "USER";
-          }
-          return new String[] {username, token, role};
+        try (PreparedStatement statement2 = conn.prepareStatement(sqlSetTokenCommand)) {
+          statement2.setString(1, username);
+          statement2.setString(2, token);
+          statement2.executeUpdate();
+        }
+
+        // TODO: sửa cái này để nó trả về string
+        String role;
+        try {
+          role = resultSet.getString("role");
+        } catch (SQLException ignored) {
+          role = "admin".equalsIgnoreCase(username) ? "ADMIN" : "USER";
+        }
+        return new String[] {username, token, role};
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);

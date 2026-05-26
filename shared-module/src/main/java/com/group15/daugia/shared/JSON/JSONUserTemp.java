@@ -22,6 +22,10 @@ public class JSONUserTemp extends JSONTemp {
     this.role = role;
   }
 
+  public String getUsername() {
+    return this.username;
+  }
+
   public String[] getLoginData() {
     return new String[] {username, password};
   }
