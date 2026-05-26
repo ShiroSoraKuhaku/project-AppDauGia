@@ -4,9 +4,13 @@ public class JSONItemTemp extends JSONTemp {
   private int id;
   private String name;
   private double price;
+  private double curPrice;
   private String desc;
   private String startTime;
   private String endTime;
+  private String status;
+  private long secondsRemaining;
+  private long secondsToStart;
 
   private String token;
 
@@ -36,6 +40,14 @@ public class JSONItemTemp extends JSONTemp {
     this.price = price;
   }
 
+  public double getCurPrice() {
+    return curPrice;
+  }
+
+  public void setCurPrice(double curPrice) {
+    this.curPrice = curPrice;
+  }
+
   public String getDesc() {
     return desc;
   }
@@ -58,6 +70,30 @@ public class JSONItemTemp extends JSONTemp {
 
   public void setEndTime(String endTime) {
     this.endTime = endTime;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public long getSecondsRemaining() {
+    return secondsRemaining;
+  }
+
+  public void setSecondsRemaining(long secondsRemaining) {
+    this.secondsRemaining = secondsRemaining;
+  }
+
+  public long getSecondsToStart() {
+    return secondsToStart;
+  }
+
+  public void setSecondsToStart(long secondsToStart) {
+    this.secondsToStart = secondsToStart;
   }
 
   public String getToken() {

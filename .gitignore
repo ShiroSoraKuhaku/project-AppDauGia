@@ -38,3 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 mysql-db/
+
+.serena/
+AGENTS.md
+AI_PLAN.md
