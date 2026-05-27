@@ -13,6 +13,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * SELL-ITEM: tạo item mới và đồng thời tạo auction cho item đó.
+ *
+ * <p>Request JSON: { "token": "...", "name": "...", "price": 100.0, "desc": "...",
+ * "startTime": "yyyy-MM-dd HH:mm:ss", "endTime": "yyyy-MM-dd HH:mm:ss" }
+ * <p>Nếu thiếu cả startTime và endTime thì server tự set startTime = now, endTime = now + 1 giờ.
+ * <p>Response JSON: { "response": "201 Created", "id": 1 }
+ *   { "response": "400 Bad Request" } nếu dữ liệu không hợp lệ
+ *   { "response": "500 Server Error" } nếu tạo item/auction thất bại
+ */
 public class SellItemWorker implements Workable {
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -39,8 +49,9 @@ public class SellItemWorker implements Workable {
       endTime = startTime.plusHours(1);
     }
 
-    if (sellerUsername == null
-        || item.getName() == null
+    if (sellerUsername == null) {
+      ans.setResponse("400 Bad Request");
+    } else if (item.getName() == null
         || item.getName().isBlank()
         || item.getPrice() <= 0
         || startTime == null

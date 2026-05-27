@@ -6,6 +6,15 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 
+/**
+ * DELETE-ITEM: xóa item của người bán hiện tại.
+ *
+ * <p>Request JSON: { "id": 1, "token": "..." }
+ * <p>Response JSON: { "response": "200 OK" }
+ *   { "response": "400 Bad Request" } nếu thiếu hoặc sai dữ liệu
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *   { "response": "404 Not Found" } nếu item không tồn tại hoặc không thuộc về seller
+ */
 public class DeleteItemWorker implements Workable {
   @Override
   public String work(String data) {
@@ -20,7 +29,9 @@ public class DeleteItemWorker implements Workable {
 
     String sellerUsername = UserDAO.getUserDao().getUsernameByToken(item.getToken());
 
-    if (sellerUsername == null || item.getId() <= 0) {
+    if (sellerUsername == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (item.getId() <= 0) {
       ans.setResponse("400 Bad Request");
     } else {
       String result = ItemDAO.getItemDao().deleteItem(item.getId(), sellerUsername);

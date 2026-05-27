@@ -110,6 +110,9 @@ public class AuctionClock {
     boolean updated = dao.markAuctionEnded(auctionId, LocalDateTime.now());
     if (!updated) return;
 
+    // Settle: trừ tiền winner, release tất cả holds
+    dao.settleAuction(auctionId);
+
     JSONAuctionTemp snap = dao.getAuctionSnapshot(auctionId);
     if (snap == null) return;
 

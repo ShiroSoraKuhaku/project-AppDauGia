@@ -13,6 +13,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * UPDATE-ITEM: cập nhật thông tin item và lịch auction liên quan.
+ *
+ * <p>Request JSON: { "id": 1, "token": "...", "name": "...", "price": 100.0, "desc": "...",
+ * "startTime": "yyyy-MM-dd HH:mm:ss", "endTime": "yyyy-MM-dd HH:mm:ss" }
+ * <p>Response JSON: { "response": "200 OK" }
+ *   { "response": "400 Bad Request" } nếu dữ liệu không hợp lệ
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *   { "response": "404 Not Found" } nếu item không thuộc về seller
+ */
 public class UpdateItemWorker implements Workable {
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -31,8 +41,9 @@ public class UpdateItemWorker implements Workable {
     LocalDateTime startTime = parseTime(item.getStartTime());
     LocalDateTime endTime = parseTime(item.getEndTime());
 
-    if (sellerUsername == null
-        || item.getId() <= 0
+    if (sellerUsername == null) {
+      ans.setResponse("401 Unauthorized");
+    } else if (item.getId() <= 0
         || item.getName() == null
         || item.getName().isBlank()
         || item.getPrice() <= 0

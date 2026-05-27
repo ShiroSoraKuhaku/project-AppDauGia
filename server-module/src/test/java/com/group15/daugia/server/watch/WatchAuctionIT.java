@@ -18,6 +18,7 @@ public class WatchAuctionIT extends BaseTest {
         cleanAll();
         seedUserWithToken("watcher", "pass", "tok-watcher");
         seedUserWithToken("bidder", "pass", "tok-bidder");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"tok-bidder\",\"amount\":1000.0}");
         itemId = seedItem("watcher", "Watch Item", 100.0);
         auctionId = seedActiveAuction("Watch Auction", itemId, 100.0, 3600);
     }

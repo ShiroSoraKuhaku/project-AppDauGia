@@ -6,11 +6,12 @@ import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONAuctionTemp;
 
 /**
- * UNWATCH-AUCTION: hủy đăng ký watcher. Lệnh này được gửi trong session watch (đọc bởi
- * ClientHandler), nhưng cũng có thể dùng như short-lived request nếu cần.
+ * UNWATCH-AUCTION: hủy đăng ký watcher.
  *
- * <p>Request JSON: { "auctionId": 1, "token": "..." } Response JSON: { "response": "204 No Content"
- * }
+ * <p>Lệnh này thường được gửi trong session WATCH-AUCTION để đóng phiên watch.
+ * <p>Request JSON: { "auctionId": 1, "token": "..." }
+ * <p>Response JSON: { "response": "204 No Content" }
+ *   { "response": "401 Unauthorized" } nếu token sai
  */
 public class UnwatchAuctionWorker implements Workable {
 
@@ -20,6 +21,11 @@ public class UnwatchAuctionWorker implements Workable {
   public String work(String data) {
     JSONAuctionTemp req = gson.fromJson(data, JSONAuctionTemp.class);
     JSONAuctionTemp ans = new JSONAuctionTemp();
+
+    if (req == null || req.getToken() == null || req.getToken().isBlank()) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
 
     String username = UserDAO.getUserDao().getUsernameByToken(req.getToken());
     if (username == null) {

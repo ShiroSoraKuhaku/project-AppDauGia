@@ -11,20 +11,15 @@ import com.group15.daugia.shared.JSON.JSONAuctionTemp;
 import com.group15.daugia.shared.JSON.JSONAutoBidTemp;
 
 /**
- * SET-AUTO-BID: đặt giá tự động tối đa cho một auction đang ACTIVE.
+ * SET-AUTO-BID: đặt mức giá tối đa cho một auction đang ACTIVE.
  *
  * <p>Request JSON: { "auctionId": 1, "token": "...", "maxAmount": 200.0 }
- * Response JSON:
- *   {
- *     "response": "201 Created",
- *     "auctionId": 1,
- *     "bidderUsername": "...",
- *     "maxAmount": 200.0
- *   }
- *   { "response": "400 Bad Request" } nếu input không hợp lệ / auction không ACTIVE
+ * <p>Response JSON:
+ *   { "response": "201 Created", "auctionId": 1, "bidderUsername": "...", "maxAmount": 200.0 }
+ *   { "response": "400 Bad Request" } nếu input không hợp lệ hoặc auction không ACTIVE
  *   { "response": "401 Unauthorized" } nếu token sai
  *   { "response": "404 Not Found" } nếu auction không tồn tại
- *   { "response": "409 Conflict" } nếu maxAmount thấp (không đủ tăng giá)
+ *   { "response": "409 Conflict" } nếu maxAmount không đủ cao
  */
 public class AutoBidWorker implements Workable {
 

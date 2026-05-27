@@ -22,6 +22,8 @@ public class AutoBidIT extends BaseTest {
         cleanAll();
         seedUserWithToken("userA", "pass", "tok-userA");
         seedUserWithToken("userB", "pass", "tok-userB");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"tok-userA\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"tok-userB\",\"amount\":1000.0}");
         itemId = seedItem("userA", "Auto Item", 100.0);
         auctionId = seedActiveAuction("Auto Auction", itemId, 100.0, 3600);
     }

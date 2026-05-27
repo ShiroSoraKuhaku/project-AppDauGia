@@ -13,8 +13,12 @@ import java.io.PrintWriter;
  * WATCH-AUCTION: đăng ký client vào danh sách watcher của một auction. Trả ACK ngay, giữ socket mở
  * để nhận push event.
  *
- * <p>Request JSON: { "auctionId": 1, "token": "..." } ACK JSON: { "response": "200 OK",
- * "auctionId": 1, ... snapshot ... }
+ * <p>Request JSON: { "auctionId": 1, "token": "..." }
+ * <p>ACK JSON: { "response": "200 OK", "auctionId": 1, ... snapshot ... }
+ * <p>Event JSON: { "eventType": "AUCTION_STARTED" | "AUCTION_ENDED" | "AUCTION_EXTENDED" |
+ * "BID_PLACED" | "AUCTION_CANCELLED" | "BID_CANCELLED", "auctionId": 1, "status": "...",
+ * "curPrice": 0.0, "curLeader": "...", "endTime": "...", "secondsRemaining": 0, "version": 1,
+ * "bidderUsername": "...", "bidAmount": 0.0 }
  */
 public class WatchAuctionWorker implements PersistentWorkable {
 
@@ -38,7 +42,11 @@ public class WatchAuctionWorker implements PersistentWorkable {
     JSONAuctionTemp req = gson.fromJson(data, JSONAuctionTemp.class);
     JSONAuctionTemp ans = new JSONAuctionTemp();
 
-    // Validate token
+    if (req == null || req.getToken() == null || req.getToken().isBlank() || req.getAuctionId() <= 0) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
+
     String username = UserDAO.getUserDao().getUsernameByToken(req.getToken());
     if (username == null) {
       ans.setResponse("401 Unauthorized");

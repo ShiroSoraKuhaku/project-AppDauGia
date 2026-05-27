@@ -26,6 +26,7 @@ public class PlaceBidConcurrencyIT extends BaseTest {
         cleanAll();
         for (int i = 1; i <= 5; i++) {
             seedUserWithToken("cbidder" + i, "pass", "ctok" + i);
+            sendCommand("TOPUP-BALANCE", "{\"token\":\"ctok" + i + "\",\"amount\":1000.0}");
         }
         itemId = seedItem("cbidder1", "Concurrent Item", 100.0);
         auctionId = seedActiveAuction("Concurrent Auction", itemId, 100.0, 3600);

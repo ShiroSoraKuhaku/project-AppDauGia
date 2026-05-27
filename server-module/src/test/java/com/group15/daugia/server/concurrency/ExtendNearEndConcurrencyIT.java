@@ -26,6 +26,8 @@ public class ExtendNearEndConcurrencyIT extends BaseTest {
         cleanAll();
         seedUserWithToken("nearend1", "pass", "netok1");
         seedUserWithToken("nearend2", "pass", "netok2");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"netok1\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"netok2\",\"amount\":1000.0}");
         itemId = seedItem("nearend1", "Near End Item", 100.0);
         // Auction kết thúc sau 20s -> trigger pessimistic + anti-sniping
         auctionId = seedActiveAuction("Near End Auction", itemId, 100.0, 20);

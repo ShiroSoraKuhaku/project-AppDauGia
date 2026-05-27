@@ -24,6 +24,8 @@ public class AuctionClockExtendIT extends BaseTest {
         cleanAll();
         seedUserWithToken("extuser1", "pass", "extok1");
         seedUserWithToken("extuser2", "pass", "extok2");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"extok1\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"extok2\",\"amount\":1000.0}");
         itemId = seedItem("extuser1", "Extend Item", 100.0);
         // Auction với 15s còn lại -> trigger anti-sniping
         auctionId = seedActiveAuction("Extend Auction", itemId, 100.0, 15);

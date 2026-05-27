@@ -30,6 +30,9 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
     `username` varchar(45) NOT NULL,
     `password` varchar(45) DEFAULT NULL,
+    `role` enum('USER','ADMIN') NOT NULL DEFAULT 'USER',
+    `balance` double NOT NULL DEFAULT 0,
+    `locked_balance` double NOT NULL DEFAULT 0,
     PRIMARY KEY (`username`),
     UNIQUE KEY `username_UNIQUE` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -120,4 +123,15 @@ CREATE TABLE `auction_auto_bids` (
     KEY `idx_auto_bid_auction_amount` (`auction_id`, `max_amount` DESC),
     CONSTRAINT `fk_auto_bid_auction` FOREIGN KEY (`auction_id`) REFERENCES `auctions` (`id`),
     CONSTRAINT `fk_auto_bid_user` FOREIGN KEY (`bidder_username`) REFERENCES `user` (`username`)
+);
+
+CREATE TABLE `auction_bid_holds` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `auction_id` int NOT NULL,
+  `bidder_username` varchar(45) NOT NULL,
+  `hold_amount` double NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_auction_bid_holds_auction_user` (`auction_id`, `bidder_username`),
+  CONSTRAINT `fk_holds_auction` FOREIGN KEY (`auction_id`) REFERENCES `auctions` (`id`),
+  CONSTRAINT `fk_holds_user` FOREIGN KEY (`bidder_username`) REFERENCES `user` (`username`)
 );

@@ -9,21 +9,30 @@ public class Work {
   private static Map<String, Workable> works = new HashMap<>();
 
   static {
+    // Auth worker
     works.put("LOGIN", new LoginWorker());
     works.put("RM-TOKEN", new LogoutWorker());
     works.put("SIGNUP", new SignupWorker());
+
+    // Item-related worker
     works.put("SELL-ITEM", new SellItemWorker());
     works.put("UPDATE-ITEM", new UpdateItemWorker());
     works.put("DELETE-ITEM", new DeleteItemWorker());
     works.put("GET-ITEMS", new GetItemsWorker());
+    works.put("GET-ITEM", new GetItemsWorker());
     works.put("GET-MY-ITEMS", new GetMyItemsWorker());
     // Auction workers
     works.put("WATCH-AUCTION", new WatchAuctionWorker());
     works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());
     works.put("PLACE-BID", new PlaceBidWorker());
     works.put("GET-AUCTION-STATE", new GetAuctionStateWorker());
-
     works.put("SET-AUTO-BID", new AutoBidWorker());
+    works.put("CANCEL-AUCTION", new CancelAuctionWorker());
+    works.put("CANCEL-BID", new CancelBidWorker());
+
+    // Topup worker
+    works.put("TOPUP-BALANCE", new TopupBalanceWorker());
+    works.put("GET-BALANCE", new GetBalanceWorker());
   }
 
   public static Map<String, Workable> getWorks() {
