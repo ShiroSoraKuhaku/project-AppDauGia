@@ -5,6 +5,13 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONUserTemp;
 
+/**
+ * SIGNUP: tạo tài khoản mới.
+ *
+ * <p>Request JSON: { "username": "...", "password": "..." }
+ * <p>Response JSON: { "response": "201 Created" }
+ *   { "response": "409 Conflict" } nếu username đã tồn tại
+ */
 public class SignupWorker implements Workable {
 
   @Override

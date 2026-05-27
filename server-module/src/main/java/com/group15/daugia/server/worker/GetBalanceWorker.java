@@ -5,6 +5,15 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONMoneyTemp;
 
+/**
+ * GET-BALANCE: lấy số dư của user hiện tại.
+ *
+ * <p>Request JSON: { "token": "..." }
+ * <p>Response JSON: { "response": "200 OK", "balance": 1000.0, "lockedBalance": 200.0,
+ * "availableBalance": 800.0 }
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *   { "response": "404 Not Found" } nếu user không tồn tại
+ */
 public class GetBalanceWorker implements Workable {
 
   private final Gson gson = new Gson();

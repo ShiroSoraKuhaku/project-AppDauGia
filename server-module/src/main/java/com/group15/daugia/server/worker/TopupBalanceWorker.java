@@ -5,6 +5,16 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONMoneyTemp;
 
+/**
+ * TOPUP-BALANCE: nạp tiền vào tài khoản.
+ *
+ * <p>Request JSON: { "token": "...", "amount": 100.0 }
+ * <p>Response JSON: { "response": "200 OK", "balance": 1000.0, "lockedBalance": 200.0,
+ * "availableBalance": 800.0 }
+ *   { "response": "400 Bad Request" } nếu amount không hợp lệ
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *   { "response": "404 Not Found" } nếu user không tồn tại
+ */
 public class TopupBalanceWorker implements Workable {
 
   private final Gson gson = new Gson();

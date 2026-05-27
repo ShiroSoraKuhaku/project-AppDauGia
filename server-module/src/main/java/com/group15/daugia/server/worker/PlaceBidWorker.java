@@ -14,8 +14,8 @@ import com.group15.daugia.shared.JSON.JSONBidTemp;
  * PLACE-BID: đặt giá cho một auction đang ACTIVE.
  *
  * <p>Request JSON: { "auctionId": 1, "token": "...", "bidAmount": 150.0 }
- * Response JSON:
- *   { "response": "201 Created", "auctionId": 1, "bidderUsername": "...", "bidAmount": 150.0 }
+ * <p>Response JSON: { "response": "201 Created", "auctionId": 1, "bidderUsername": "...",
+ * "bidAmount": 150.0 }
  *   { "response": "400 Bad Request" } nếu bid không hợp lệ
  *   { "response": "401 Unauthorized" } nếu token sai
  *   { "response": "404 Not Found" } nếu auction không tồn tại

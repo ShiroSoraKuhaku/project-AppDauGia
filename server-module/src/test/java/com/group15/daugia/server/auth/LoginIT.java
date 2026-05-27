@@ -13,7 +13,7 @@ public class LoginIT extends BaseTest {
     @BeforeEach
     void setup() throws Exception {
         cleanAll();
-        seedUserWithToken("alice", "pass123", "tok-alice");
+        seedUser("alice", "pass123");
     }
 
     @Test
@@ -51,5 +51,26 @@ public class LoginIT extends BaseTest {
         JsonObject obj = JsonParser.parseString(resp).getAsJsonObject();
         // Không phải 201
         assertNotEquals("201 Created", obj.get("response").getAsString());
+    }
+
+    @Test
+    @Order(5)
+    void loginSingleSessionConflict() throws Exception {
+        // alice đã có token "tok-alice" -> login phải bị 409
+        seedUserWithToken("alice", "pass123", "tok-alice");
+        String resp = sendCommand("LOGIN", "{\"username\":\"alice\",\"password\":\"pass123\"}");
+        JsonObject obj = JsonParser.parseString(resp).getAsJsonObject();
+        assertEquals("409 Conflict", obj.get("response").getAsString());
+    }
+
+    @Test
+    @Order(6)
+    void loginAfterLogoutSucceeds() throws Exception {
+        // Logout trước
+        sendCommand("RM-TOKEN", "{\"username\":\"alice\",\"token\":\"tok-alice\"}");
+        // Login lại phải thành công
+        String resp = sendCommand("LOGIN", "{\"username\":\"alice\",\"password\":\"pass123\"}");
+        JsonObject obj = JsonParser.parseString(resp).getAsJsonObject();
+        assertEquals("201 Created", obj.get("response").getAsString());
     }
 }

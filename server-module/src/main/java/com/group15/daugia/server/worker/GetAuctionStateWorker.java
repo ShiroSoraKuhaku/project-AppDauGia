@@ -7,12 +7,16 @@ import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONAuctionTemp;
 
 /**
- * GET-AUCTION-STATE: trả trạng thái hiện tại của một auction. Dùng để client đồng bộ ban đầu trước
- * khi gửi WATCH-AUCTION.
+ * GET-AUCTION-STATE: lấy snapshot trạng thái hiện tại của auction.
  *
- * <p>Request JSON: { "auctionId": 1, "token": "..." } Response JSON: { "response": "200 OK",
- * "auctionId": 1, "status": "ACTIVE", "curPrice": 120.0, "curLeader": "alice", "endTime":
- * "2026-05-20 15:00:00", "secondsRemaining": 300, ... }
+ * <p>Dùng để client đồng bộ trước khi gửi WATCH-AUCTION.
+ *
+ * <p>Request JSON: { "auctionId": 1, "token": "..." }
+ *
+ * <p>Response JSON: { "response": "200 OK", "auctionId": 1, "itemId": 1, "title": "...", "status":
+ * "ACTIVE", "startPrice": 100.0, "curPrice": 120.0, "curLeader": "alice", "startTime": "...",
+ * "endTime": "...", "secondsRemaining": 300, "secondsToStart": 0, "version": 1 } { "response": "401
+ * Unauthorized" } nếu token sai { "response": "404 Not Found" } nếu auction không tồn tại
  */
 public class GetAuctionStateWorker implements Workable {
 
@@ -24,7 +28,10 @@ public class GetAuctionStateWorker implements Workable {
     JSONAuctionTemp req = gson.fromJson(data, JSONAuctionTemp.class);
     JSONAuctionTemp ans = new JSONAuctionTemp();
 
-    if (req == null || req.getToken() == null || req.getToken().isBlank() || req.getAuctionId() <= 0) {
+    if (req == null
+        || req.getToken() == null
+        || req.getToken().isBlank()
+        || req.getAuctionId() <= 0) {
       ans.setResponse("401 Unauthorized");
       return gson.toJson(ans);
     }

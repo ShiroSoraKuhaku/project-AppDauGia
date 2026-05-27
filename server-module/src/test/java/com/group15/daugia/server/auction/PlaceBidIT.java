@@ -22,6 +22,8 @@ public class PlaceBidIT extends BaseTest {
         cleanAll();
         seedUserWithToken("bidder1", "pass", "tok-bidder1");
         seedUserWithToken("bidder2", "pass", "tok-bidder2");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"tok-bidder1\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"tok-bidder2\",\"amount\":1000.0}");
         itemId = seedItem("bidder1", "Auction Item", 100.0);
         auctionId = seedActiveAuction("Test Auction", itemId, 100.0, 3600);
     }

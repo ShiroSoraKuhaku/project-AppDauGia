@@ -13,8 +13,12 @@ import java.io.PrintWriter;
  * WATCH-AUCTION: đăng ký client vào danh sách watcher của một auction. Trả ACK ngay, giữ socket mở
  * để nhận push event.
  *
- * <p>Request JSON: { "auctionId": 1, "token": "..." } ACK JSON: { "response": "200 OK",
- * "auctionId": 1, ... snapshot ... }
+ * <p>Request JSON: { "auctionId": 1, "token": "..." }
+ * <p>ACK JSON: { "response": "200 OK", "auctionId": 1, ... snapshot ... }
+ * <p>Event JSON: { "eventType": "AUCTION_STARTED" | "AUCTION_ENDED" | "AUCTION_EXTENDED" |
+ * "BID_PLACED" | "AUCTION_CANCELLED" | "BID_CANCELLED", "auctionId": 1, "status": "...",
+ * "curPrice": 0.0, "curLeader": "...", "endTime": "...", "secondsRemaining": 0, "version": 1,
+ * "bidderUsername": "...", "bidAmount": 0.0 }
  */
 public class WatchAuctionWorker implements PersistentWorkable {
 

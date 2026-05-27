@@ -161,10 +161,13 @@ public abstract class BaseTest {
       st.execute("SET FOREIGN_KEY_CHECKS=0");
       for (String t :
           new String[] {
-            "auction_auto_bids", "auction_bids", "auctions", "tokens", "items", "bids", "user"
+            "auction_bid_holds", "auction_auto_bids", "auction_bids", "auctions",
+            "tokens", "items", "bids", "user"
           }) {
         st.execute("DELETE FROM `" + t + "`");
       }
+      st.execute(
+          "INSERT INTO `user` (username, password, role) VALUES ('admin','admin','ADMIN')");
       st.execute("SET FOREIGN_KEY_CHECKS=1");
     }
   }
@@ -181,6 +184,16 @@ public abstract class BaseTest {
     execSql(
         "INSERT IGNORE INTO tokens (username, token) VALUES ('" + username + "','" + token + "')");
     return token;
+  }
+
+  /** Seed một user (không tạo token). */
+  protected static void seedUser(String username, String password) throws Exception {
+    execSql(
+        "INSERT IGNORE INTO `user` (username, password) VALUES ('"
+            + username
+            + "','"
+            + password
+            + "')");
   }
 
   /** Seed một item và trả id. */

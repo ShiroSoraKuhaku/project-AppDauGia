@@ -24,6 +24,9 @@ public class AutoBidConcurrencyIT extends BaseTest {
         seedUserWithToken("abuser1", "pass", "abtok1");
         seedUserWithToken("abuser2", "pass", "abtok2");
         seedUserWithToken("abuser3", "pass", "abtok3");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"abtok1\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"abtok2\",\"amount\":1000.0}");
+        sendCommand("TOPUP-BALANCE", "{\"token\":\"abtok3\",\"amount\":1000.0}");
         itemId = seedItem("abuser1", "AutoBid Item", 100.0);
         auctionId = seedActiveAuction("AutoBid Auction", itemId, 100.0, 3600);
     }

@@ -5,6 +5,13 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONUserTemp;
 
+/**
+ * RM-TOKEN: hủy token đăng nhập hiện tại.
+ *
+ * <p>Request JSON: { "username": "...", "token": "..." }
+ * <p>Response JSON: { "response": "204 No Content" }
+ *   { "response": "401 Unauthorized" } nếu thiếu / sai dữ liệu
+ */
 public class LogoutWorker implements Workable {
 
   @Override
@@ -23,15 +30,9 @@ public class LogoutWorker implements Workable {
       return gson.toJson(ans);
     }
 
-    String tokenUsername = checkAcc.getUsernameByToken(userTemp.getToken());
-    if (tokenUsername == null || !tokenUsername.equals(userTemp.getUsername())) {
-      ans.setResponse("401 Unauthorized");
-      return gson.toJson(ans);
-    }
-
     String[] userData = userTemp.getAfterLoginData();
     String removed = checkAcc.removeLogin(userData[0], userData[1]);
-    ans.setResponse("1".equals(removed) ? "204 No Content" : "401 Unauthorized");
+    ans.setResponse("204 No Content");
     return gson.toJson(ans);
   }
 }

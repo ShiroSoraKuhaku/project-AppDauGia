@@ -17,6 +17,7 @@ public class JSONAuctionTemp extends JSONTemp {
   private String startTime; // ISO-8601 string
   private String endTime; // ISO-8601 string
   private long secondsRemaining;
+  private long secondsToStart;
   private int version;
 
   // Thông tin item liên kết
@@ -100,6 +101,14 @@ public class JSONAuctionTemp extends JSONTemp {
 
   public void setSecondsRemaining(long secondsRemaining) {
     this.secondsRemaining = secondsRemaining;
+  }
+
+  public long getSecondsToStart() {
+    return secondsToStart;
+  }
+
+  public void setSecondsToStart(long secondsToStart) {
+    this.secondsToStart = secondsToStart;
   }
 
   public int getVersion() {

@@ -7,6 +7,16 @@ import com.group15.daugia.server.Workable;
 import com.group15.daugia.shared.JSON.JSONItemListTemp;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 
+/**
+ * GET-ITEMS: lấy toàn bộ item trong hệ thống.
+ *
+ * <p>Request JSON: { "token": "..." }
+ * <p>Response JSON: { "response": "200 OK", "itemList": [...] }
+ *   { "response": "401 Unauthorized" } nếu token sai
+ *
+ * <p>Mỗi phần tử trong itemList có các field: id, sellerUsername, name, price, desc, startTime,
+ * endTime, status, curPrice, secondsRemaining, secondsToStart.
+ */
 public class GetItemsWorker implements Workable {
   private final Gson gson = new Gson();
 
