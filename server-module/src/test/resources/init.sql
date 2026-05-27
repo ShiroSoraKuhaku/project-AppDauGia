@@ -52,6 +52,7 @@ CREATE TABLE `items` (
 CREATE TABLE `tokens` (
   `username` varchar(45) NOT NULL,
   `token` varchar(45) DEFAULT NULL,
+  `last_accessed` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`username`),
   UNIQUE KEY `token_UNIQUE` (`token`),
   CONSTRAINT `username` FOREIGN KEY (`username`) REFERENCES `user` (`username`)

@@ -31,6 +31,11 @@ public class LogoutWorker implements Workable {
     }
 
     String[] userData = userTemp.getAfterLoginData();
+    boolean expired = checkAcc.deleteIfTokenExpired(userData[1]);
+    if (expired) {
+      ans.setResponse("401 Unauthorized");
+      return gson.toJson(ans);
+    }
     String removed = checkAcc.removeLogin(userData[0], userData[1]);
     ans.setResponse("204 No Content");
     return gson.toJson(ans);
