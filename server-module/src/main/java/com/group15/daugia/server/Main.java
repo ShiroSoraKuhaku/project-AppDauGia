@@ -15,6 +15,7 @@ public class Main {
 
     try {
       AuctionServer server = new AuctionServer(8080);
+      Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
       server.start();
     } catch (IOException e) {
       System.out.println("Error in server");

@@ -3,9 +3,11 @@ package com.group15.daugia.server.DAO;
 import com.group15.daugia.server.resource.DBProperty;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class UserDAO {
+  public static final long TOKEN_IDLE_MINUTES = 15;
   public static final String LOGIN_CONFLICT = "LOGIN_CONFLICT";
 
   private static UserDAO instance;
@@ -21,8 +23,12 @@ public class UserDAO {
 
   public String[] checkLogin(String username, String password) {
     String sqlCheckCommand = "select username, role from user where username = ? and password = ?";
-    String sqlCheckTokenCommand = "select token from tokens where username = ?";
-    String sqlSetTokenCommand = "insert into tokens (username, token) values (?, ?)";
+    String sqlCheckTokenCommand =
+        "select token from tokens where username = ? and last_accessed >= DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+    String sqlDeleteTokenCommand =
+        "delete from tokens where username = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+    String sqlSetTokenCommand =
+        "insert into tokens (username, token, last_accessed) values (?, ?, NOW())";
 
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
@@ -37,8 +43,15 @@ public class UserDAO {
           return null;
         }
 
+        try (PreparedStatement cleanup = conn.prepareStatement(sqlDeleteTokenCommand)) {
+          cleanup.setString(1, username);
+          cleanup.setLong(2, TOKEN_IDLE_MINUTES);
+          cleanup.executeUpdate();
+        }
+
         try (PreparedStatement tokenCheck = conn.prepareStatement(sqlCheckTokenCommand)) {
           tokenCheck.setString(1, username);
+          tokenCheck.setLong(2, TOKEN_IDLE_MINUTES);
           try (ResultSet tokenRs = tokenCheck.executeQuery()) {
             if (tokenRs.next()) {
               return new String[] {LOGIN_CONFLICT, null, null};
@@ -103,21 +116,36 @@ public class UserDAO {
   }
 
   public String getUsernameByToken(String token){
-    String sql = "select username from tokens where token = ?";
+    String sqlDelete =
+        "delete from tokens where token = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+    String sqlSelect = "select username from tokens where token = ?";
+    String sqlTouch = "update tokens set last_accessed = NOW() where token = ?";
 
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                     dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
-            );
-         PreparedStatement statement = conn.prepareStatement(sql)){
-      statement.setString(1, token);
-
-      try (ResultSet resultSet = statement.executeQuery()){
-        if (resultSet.next()){
-          return resultSet.getString("username");
+            )) {
+      try (PreparedStatement delete = conn.prepareStatement(sqlDelete)) {
+        delete.setString(1, token);
+        delete.setLong(2, TOKEN_IDLE_MINUTES);
+        if (delete.executeUpdate() > 0) {
+          return null;
         }
-        return null;
+      }
+
+      try (PreparedStatement select = conn.prepareStatement(sqlSelect)) {
+        select.setString(1, token);
+        try (ResultSet resultSet = select.executeQuery()){
+          if (resultSet.next()){
+            try (PreparedStatement touch = conn.prepareStatement(sqlTouch)) {
+              touch.setString(1, token);
+              touch.executeUpdate();
+            }
+            return resultSet.getString("username");
+          }
+          return null;
+        }
       }
     } catch (SQLException e) {
         throw new RuntimeException(e);
@@ -127,23 +155,106 @@ public class UserDAO {
   public String getRoleByToken(String token) {
     String sql =
         "select u.role from user u join tokens t on t.username = u.username where t.token = ?";
+    String sqlDelete =
+        "delete from tokens where token = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+    String sqlTouch = "update tokens set last_accessed = NOW() where token = ?";
+
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
+            )) {
+      try (PreparedStatement delete = conn.prepareStatement(sqlDelete)) {
+        delete.setString(1, token);
+        delete.setLong(2, TOKEN_IDLE_MINUTES);
+        if (delete.executeUpdate() > 0) {
+          return null;
+        }
+      }
+
+      try (PreparedStatement statement = conn.prepareStatement(sql)) {
+        statement.setString(1, token);
+        try (ResultSet resultSet = statement.executeQuery()) {
+          if (resultSet.next()) {
+            try (PreparedStatement touch = conn.prepareStatement(sqlTouch)) {
+              touch.setString(1, token);
+              touch.executeUpdate();
+            }
+            return resultSet.getString("role");
+          }
+          return null;
+        }
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean deleteIfTokenExpired(String token) {
+    String sqlDelete =
+        "delete from tokens where token = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
 
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
             DriverManager.getConnection(
                     dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword()
             );
-         PreparedStatement statement = conn.prepareStatement(sql)) {
-      statement.setString(1, token);
-      try (ResultSet resultSet = statement.executeQuery()) {
-        if (resultSet.next()) {
-          return resultSet.getString("role");
-        }
-        return null;
-      }
+         PreparedStatement delete = conn.prepareStatement(sqlDelete)) {
+      delete.setString(1, token);
+      delete.setLong(2, TOKEN_IDLE_MINUTES);
+      return delete.executeUpdate() > 0;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public int deleteExpiredTokens(LocalDateTime cutoff) {
+    String sql = "delete from tokens where last_accessed < ?";
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+         PreparedStatement statement = conn.prepareStatement(sql)) {
+      statement.setTimestamp(1, Timestamp.valueOf(cutoff));
+      return statement.executeUpdate();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public int deleteExpiredTokens() {
+    String sql = "delete from tokens where last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+         PreparedStatement statement = conn.prepareStatement(sql)) {
+      statement.setLong(1, TOKEN_IDLE_MINUTES);
+      return statement.executeUpdate();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public int deleteAllTokens() {
+    String sql = "delete from tokens";
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                    dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+         PreparedStatement statement = conn.prepareStatement(sql)) {
+      return statement.executeUpdate();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Timestamp getCurrentTimestamp() {
+    return Timestamp.valueOf(LocalDateTime.now());
+  }
+
+  private Timestamp getCutoffTimestamp() {
+    return Timestamp.valueOf(LocalDateTime.now().minusMinutes(TOKEN_IDLE_MINUTES));
   }
 
   public double[] getBalanceInfo(String username) {

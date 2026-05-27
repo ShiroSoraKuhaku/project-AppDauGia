@@ -26,6 +26,7 @@ public class AuctionServer {
   public void start() {
     this.isRunnin = true;
     System.out.println("Server on");
+    TokenClock.getInstance().start();
     try {
       while (true) {
         socket = serverSocket.accept();
@@ -52,6 +53,7 @@ public class AuctionServer {
       e.printStackTrace();
     }
     threadPool.shutdown();
+    TokenClock.getInstance().shutdownAndClearTokens();
   }
 
   public int gerPort() {
