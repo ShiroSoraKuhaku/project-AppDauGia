@@ -1,5 +1,5 @@
 ﻿# Stage 1: Build stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
 # Copy root pom.xml
@@ -24,7 +24,7 @@ RUN mvn install -pl shared-module -am -DskipTests
 RUN mvn package -pl server-module -DskipTests
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Copy file JAR
