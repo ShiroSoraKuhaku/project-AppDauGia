@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox spacing="15" prefWidth="980" prefHeight="540"
+<HBox spacing="12" prefWidth="820" prefHeight="540"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.group15.daugia.client.controller.MenuSellerController"
       stylesheets="@css/menu.css">
@@ -25,7 +25,7 @@
         </TableView>
     </VBox>
 
-    <VBox spacing="10" prefWidth="280" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
+    <VBox spacing="10" prefWidth="245" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
         <Label text="THÔNG TIN SẢN PHẨM" style="-fx-font-weight: bold;"/>
 
         <Label text="Tên sản phẩm:"/>
@@ -35,7 +35,10 @@
         <TextField fx:id="txtDesc"/>
 
         <Label text="Giá sàn:"/>
-        <TextField fx:id="txtPrice"/>
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <TextField fx:id="txtPrice" HBox.hgrow="ALWAYS"/>
+            <Label text="VND" style="-fx-font-weight: bold; -fx-text-fill: #2f3542;"/>
+        </HBox>
 
         <Label text="Thời gian bắt đầu:"/>
         <TextField fx:id="txtStartTime" promptText="yyyy-MM-dd HH:mm:ss"/>

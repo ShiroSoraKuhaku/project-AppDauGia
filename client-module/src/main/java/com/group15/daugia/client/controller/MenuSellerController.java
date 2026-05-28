@@ -12,14 +12,18 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 
@@ -41,12 +45,22 @@ public class MenuSellerController implements Initializable {
     private ObservableList<BaseItem> productList;
     private final Gson gson = new Gson();
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DecimalFormat PRICE_FORMATTER =
+            new DecimalFormat("#,##0", DecimalFormatSymbols.getInstance(Locale.US));
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        tableProducts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colPrice.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+                setText(empty || price == null ? null : formatPriceWithUnit(price));
+            }
+        });
         colStartTime.setCellValueFactory(new PropertyValueFactory<>("startTime"));
         colEndTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
 
@@ -58,7 +72,7 @@ public class MenuSellerController implements Initializable {
             if (newSelection != null) {
                 txtName.setText(newSelection.getName());
                 txtDesc.setText(newSelection.getDescription());
-                txtPrice.setText(String.valueOf(newSelection.getPrice()));
+                txtPrice.setText(formatEditablePrice(newSelection.getPrice()));
                 txtStartTime.setText(newSelection.getStartTime());
                 txtEndTime.setText(newSelection.getEndTime());
             }
@@ -204,11 +218,33 @@ public class MenuSellerController implements Initializable {
 
     private Double parsePrice() {
         try {
-            return Double.parseDouble(txtPrice.getText().trim());
+            return Double.parseDouble(normalizePriceInput(txtPrice.getText()));
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Giá sản phẩm phải là số.");
             return null;
         }
+    }
+
+    private String normalizePriceInput(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace(",", "").replace("VND", "").trim();
+    }
+
+    private String formatPrice(double price) {
+        return PRICE_FORMATTER.format(price);
+    }
+
+    private String formatPriceWithUnit(double price) {
+        return formatPrice(price) + " VND";
+    }
+
+    private String formatEditablePrice(double price) {
+        if (price == Math.rint(price)) {
+            return String.valueOf((long) price);
+        }
+        return String.valueOf(price);
     }
 
     private boolean validateProductInput(String name, double price) {

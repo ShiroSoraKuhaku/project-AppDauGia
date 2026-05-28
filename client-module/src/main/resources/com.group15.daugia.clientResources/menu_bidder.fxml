@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="10" prefWidth="980" prefHeight="540"
+<VBox spacing="10" prefWidth="820" prefHeight="540"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.group15.daugia.client.controller.MenuBidderController"
       stylesheets="@css/menu.css">

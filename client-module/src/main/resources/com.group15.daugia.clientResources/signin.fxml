@@ -9,7 +9,7 @@
     <VBox alignment="CENTER" layoutX="150.0" layoutY="40.0" spacing="20.0" styleClass="card"
           AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0"
           AnchorPane.topAnchor="40.0">
-        <Label styleClass="title-label" text="Tạo Tài Khoản"/>
+        <Label styleClass="title-label" text="Tạo tài khoản"/>
 
         <VBox spacing="5.0">
             <Label styleClass="input-label" text="Tên đăng nhập"/>
