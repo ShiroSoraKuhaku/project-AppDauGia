@@ -9,8 +9,9 @@ import com.group15.daugia.shared.JSON.JSONUserTemp;
  * SIGNUP: tạo tài khoản mới.
  *
  * <p>Request JSON: { "username": "...", "password": "..." }
- * <p>Response JSON: { "response": "201 Created" }
- *   { "response": "409 Conflict" } nếu username đã tồn tại
+ *
+ * <p>Response JSON: { "response": "201 Created" } { "response": "409 Conflict" } nếu username đã
+ * tồn tại
  */
 public class SignupWorker implements Workable {
 
@@ -23,6 +24,11 @@ public class SignupWorker implements Workable {
     UserDAO userDao = UserDAO.getUserDao();
 
     String answer = userDao.signUp(userData[0], userData[1]);
+    if (userData[1].isEmpty()) {
+      ans.setResponse("400 Bad Request");
+      return gson.toJson(ans);
+    }
+
     if (answer.equals("1")) {
       ans.setResponse("201 Created");
     } else {
