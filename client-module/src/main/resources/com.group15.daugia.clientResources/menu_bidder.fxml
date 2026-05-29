@@ -4,22 +4,36 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="10" prefWidth="980" prefHeight="540"
+<VBox spacing="0" prefWidth="860" prefHeight="520"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.group15.daugia.client.controller.MenuBidderController"
+      styleClass="bidding-root"
       stylesheets="@css/menu.css">
-    <padding>
-        <Insets top="15" right="15" bottom="15" left="15"/>
-    </padding>
 
-    <Label text="DANH SÁCH SẢN PHẨM ĐẤU GIÁ" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-    <TableView fx:id="table" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="table_name" text="Tên sản phẩm" prefWidth="170"/>
-            <TableColumn fx:id="table_description" text="Mô tả ngắn" prefWidth="180"/>
-            <TableColumn fx:id="table_price" text="Giá khởi điểm" prefWidth="110"/>
-            <TableColumn fx:id="table_start_time" text="Bắt đầu" prefWidth="150"/>
-            <TableColumn fx:id="table_end_time" text="Kết thúc" prefWidth="150"/>
-        </columns>
-    </TableView>
+    <!-- Header bar -->
+    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-background-color: white;
+            -fx-border-color: #dfe4ea; -fx-border-width: 0 0 1 0;">
+        <padding>
+            <Insets top="14" right="20" bottom="14" left="20"/>
+        </padding>
+        <VBox spacing="2">
+            <Label text="Sản phẩm đấu giá" styleClass="section-title"/>
+            <Label fx:id="lblSubtitle" text="Đang tải..." styleClass="section-subtitle"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblBalance" text="Số dư: --" styleClass="wallet-label"/>
+        <Button fx:id="btnTopup" text="Nạp tiền" onAction="#handleTopup"
+                styleClass="menu-button-secondary"/>
+        <Button fx:id="btnRefresh" text="↻  Làm mới" onAction="#handleRefresh"
+                styleClass="menu-button-secondary"/>
+    </HBox>
+
+    <!-- Scrollable card list -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+        <padding>
+            <Insets top="16" right="16" bottom="16" left="16"/>
+        </padding>
+        <FlowPane fx:id="cardPane" hgap="14" vgap="14" prefWrapLength="820"/>
+    </ScrollPane>
 </VBox>

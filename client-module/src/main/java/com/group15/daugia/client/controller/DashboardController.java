@@ -1,5 +1,6 @@
 package com.group15.daugia.client.controller;
 
+import com.group15.daugia.client.MainApp;
 import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.model.User;
 import com.group15.daugia.client.util.SceneChanger;
@@ -57,6 +58,7 @@ public class DashboardController implements Initializable {
 
   @FXML
   private void logout() {
+    MainApp.logoutCurrentSession();
     SessionManager.clear();
     User.setUsername(null);
     SceneChanger.changeTo("com.group15.daugia.clientResources/login.fxml");

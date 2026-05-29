@@ -10,22 +10,41 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
+  private static boolean logoutSent;
 
   @Override
   public void start(Stage mainStage) throws Exception {
     mainStage.setTitle("Ứng dụng đấu giá");
     SceneChanger.setMainStage(mainStage);
     SceneChanger.changeTo("com.group15.daugia.clientResources/login.fxml");
-    mainStage.setOnCloseRequest(
-        windowEvent -> {
-          if (SessionManager.getToken() != null && !SessionManager.getToken().isEmpty()) {
-            Gson gson = new Gson();
-            JSONUserTemp loggedUser = new JSONUserTemp();
-            loggedUser.setUsername(User.getUsername());
-            loggedUser.setToken(SessionManager.getToken());
+    mainStage.setOnCloseRequest(event -> logoutCurrentSession());
+  }
 
-            ShortConnectNetwork.shortReq("RM-TOKEN", gson.toJson(loggedUser));
-          }
-        });
+  @Override
+  public void stop() {
+    logoutCurrentSession();
+  }
+
+  public static void resetLogoutState() {
+    logoutSent = false;
+  }
+
+  public static void logoutCurrentSession() {
+    if (logoutSent) {
+      return;
+    }
+
+    String token = SessionManager.getToken();
+    String username = User.getUsername();
+    if (token == null || token.isBlank() || username == null || username.isBlank()) {
+      return;
+    }
+
+    logoutSent = true;
+    Gson gson = new Gson();
+    JSONUserTemp loggedUser = new JSONUserTemp();
+    loggedUser.setUsername(username);
+    loggedUser.setToken(token);
+    ShortConnectNetwork.shortReq("RM-TOKEN", gson.toJson(loggedUser));
   }
 }

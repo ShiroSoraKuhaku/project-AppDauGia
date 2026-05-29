@@ -4,49 +4,89 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox spacing="15" prefWidth="980" prefHeight="540"
-      xmlns:fx="http://javafx.com/fxml"
+<VBox spacing="14" prefWidth="1180" prefHeight="760"
+      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.group15.daugia.client.controller.MenuSellerController"
+      styleClass="seller-root"
       stylesheets="@css/menu.css">
     <padding>
-        <Insets top="15" right="15" bottom="15" left="15"/>
+        <Insets top="16" right="16" bottom="16" left="16"/>
     </padding>
 
-    <VBox spacing="10" HBox.hgrow="ALWAYS">
-        <Label text="DANH SÁCH SẢN PHẨM ĐANG ĐẤU GIÁ" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-        <TableView fx:id="tableProducts" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colName" text="Tên sản phẩm" prefWidth="170"/>
-                <TableColumn fx:id="colDesc" text="Mô tả ngắn" prefWidth="180"/>
-                <TableColumn fx:id="colPrice" text="Giá khởi điểm" prefWidth="110"/>
-                <TableColumn fx:id="colStartTime" text="Bắt đầu" prefWidth="150"/>
-                <TableColumn fx:id="colEndTime" text="Kết thúc" prefWidth="150"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #dfe4ea; -fx-border-radius: 12; -fx-padding: 14 18;">
+        <VBox spacing="2">
+            <Label text="Màn hình bán" styleClass="section-title"/>
+            <Label fx:id="lblSubtitle" text="Đang tải..." styleClass="section-subtitle"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="↻  Làm mới" onAction="#handleRefresh" styleClass="menu-button-secondary"/>
+    </HBox>
 
-    <VBox spacing="10" prefWidth="280" style="-fx-background-color: #f1f2f6; -fx-padding: 15; -fx-background-radius: 5;">
-        <Label text="THÔNG TIN SẢN PHẨM" style="-fx-font-weight: bold;"/>
+    <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="seller-split-pane">
+        <VBox spacing="12" styleClass="seller-panel">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="Sản phẩm đang bán" styleClass="seller-panel-title"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label text="Chọn card để xem hoặc xóa" styleClass="seller-panel-subtitle"/>
+            </HBox>
 
-        <Label text="Tên sản phẩm:"/>
-        <TextField fx:id="txtName"/>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                <padding>
+                    <Insets top="2" right="2" bottom="2" left="2"/>
+                </padding>
+                <FlowPane fx:id="cardPane" hgap="14" vgap="14" prefWrapLength="720"/>
+            </ScrollPane>
+        </VBox>
 
-        <Label text="Mô tả:"/>
-        <TextField fx:id="txtDesc"/>
+        <VBox spacing="12" styleClass="seller-panel">
+            <Label text="Thông tin đăng bán" styleClass="seller-panel-title"/>
+            <Label text="Tự chọn mở sau bao lâu và kéo dài bao lâu." styleClass="seller-panel-subtitle"/>
 
-        <Label text="Giá sàn:"/>
-        <TextField fx:id="txtPrice"/>
+            <VBox spacing="6">
+                <Label text="Tên sản phẩm" styleClass="seller-field-label"/>
+                <TextField fx:id="txtName" styleClass="bidding-input"/>
+            </VBox>
 
-        <Label text="Thời gian bắt đầu:"/>
-        <TextField fx:id="txtStartTime" promptText="yyyy-MM-dd HH:mm:ss"/>
+            <VBox spacing="6">
+                <Label text="Mô tả" styleClass="seller-field-label"/>
+                <TextField fx:id="txtDesc" styleClass="bidding-input"/>
+            </VBox>
 
-        <Label text="Thời gian kết thúc:"/>
-        <TextField fx:id="txtEndTime" promptText="yyyy-MM-dd HH:mm:ss"/>
+            <VBox spacing="6">
+                <Label text="Giá sàn" styleClass="seller-field-label"/>
+                <TextField fx:id="txtPrice" styleClass="bidding-input"/>
+            </VBox>
 
-        <Separator/>
+            <VBox spacing="6">
+                <Label text="Thời gian bắt đầu" styleClass="seller-field-label"/>
+                <TextField fx:id="txtStartTime" promptText="yyyy-MM-dd HH:mm:ss" styleClass="bidding-input"/>
+            </VBox>
 
-        <Button text="Đăng sản phẩm" onAction="#handleAddProduct" maxWidth="Infinity" style="-fx-background-color: #2ed573; -fx-text-fill: white;"/>
-        <Button text="Sửa thông tin" onAction="#handleUpdateProduct" maxWidth="Infinity" style="-fx-background-color: #ffa502; -fx-text-fill: white;"/>
-        <Button text="Hủy đấu giá (Xóa)" onAction="#handleDeleteProduct" maxWidth="Infinity" style="-fx-background-color: #ff4757; -fx-text-fill: white;"/>
-    </VBox>
-</HBox>
+            <VBox spacing="6">
+                <Label text="Thời gian kết thúc" styleClass="seller-field-label"/>
+                <TextField fx:id="txtEndTime" promptText="yyyy-MM-dd HH:mm:ss" styleClass="bidding-input"/>
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Mở nhanh" styleClass="seller-field-label"/>
+                <HBox spacing="8">
+                    <TextField fx:id="txtQuickStartAfter" promptText="Mở sau (phút)" styleClass="bidding-input"/>
+                    <TextField fx:id="txtQuickDuration" promptText="Kéo dài (phút)" styleClass="bidding-input"/>
+                    <Button text="Áp dụng" onAction="#handleApplyQuickTime" styleClass="menu-button-secondary"/>
+                </HBox>
+                <Label text="Bạn có thể nhập phút hoặc nhập giờ tương đương (vd 90 = 1.5h)." styleClass="seller-hint"/>
+            </VBox>
+
+            <HBox spacing="10">
+                <Button text="Đăng bán" onAction="#handleAddProduct" maxWidth="Infinity" HBox.hgrow="ALWAYS"
+                        styleClass="seller-button-primary"/>
+                <Button text="Xóa" onAction="#handleDeleteProduct" maxWidth="Infinity" HBox.hgrow="ALWAYS"
+                        styleClass="seller-button-danger"/>
+            </HBox>
+
+            <Button text="Làm trống form" onAction="#handleClearForm" maxWidth="Infinity"
+                    styleClass="menu-button-secondary"/>
+        </VBox>
+    </SplitPane>
+</VBox>

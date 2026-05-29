@@ -16,7 +16,7 @@
             <Label text="Đấu giá" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2f3542;"/>
             <Pane HBox.hgrow="ALWAYS"/>
             <Button fx:id="bidderButton" mnemonicParsing="false" onAction="#showBidder" text="Đấu giá" styleClass="menu-button-secondary"/>
-            <Button fx:id="sellerButton" mnemonicParsing="false" onAction="#showSeller" text="Đăng bán" styleClass="menu-button-secondary"/>
+            <Button fx:id="sellerButton" mnemonicParsing="false" onAction="#showSeller" text="Bán" styleClass="menu-button-secondary"/>
             <Button fx:id="adminButton" mnemonicParsing="false" onAction="#showAdmin" text="Quản trị" styleClass="menu-button"/>
             <Button mnemonicParsing="false" onAction="#logout" text="Đăng xuất" styleClass="menu-button-secondary"/>
         </HBox>
