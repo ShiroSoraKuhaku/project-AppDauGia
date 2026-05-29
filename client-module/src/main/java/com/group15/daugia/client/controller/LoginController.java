@@ -1,5 +1,6 @@
 package com.group15.daugia.client.controller;
 
+import com.group15.daugia.client.MainApp;
 import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.client.model.User;
@@ -65,6 +66,7 @@ public class LoginController implements Initializable {
             User.setUsername(username);
             SessionManager.setToken(afterLoginData.getToken());
             SessionManager.setRole(afterLoginData.getRole());
+            MainApp.resetLogoutState();
             System.out.println(SessionManager.getToken());
             SceneChanger.changeTo("com.group15.daugia.clientResources/dashboard.fxml");
           }

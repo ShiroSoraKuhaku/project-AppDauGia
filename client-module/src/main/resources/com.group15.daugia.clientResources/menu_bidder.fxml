@@ -21,6 +21,9 @@
             <Label fx:id="lblSubtitle" text="Đang tải..." styleClass="section-subtitle"/>
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblBalance" text="Số dư: --" styleClass="wallet-label"/>
+        <Button fx:id="btnTopup" text="Nạp tiền" onAction="#handleTopup"
+                styleClass="menu-button-secondary"/>
         <Button fx:id="btnRefresh" text="↻  Làm mới" onAction="#handleRefresh"
                 styleClass="menu-button-secondary"/>
     </HBox>

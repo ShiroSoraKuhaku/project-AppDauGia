@@ -288,7 +288,13 @@ public class BiddingController implements Initializable {
             } else {
                 String msg = (answer != null && answer.getResponse() != null)
                         ? answer.getResponse() : "Không rõ lỗi";
-                showAlert(Alert.AlertType.ERROR, "Đặt giá thất bại", "Máy chủ phản hồi: " + msg);
+                if ("409 Conflict".equals(msg)) {
+                    showAlert(Alert.AlertType.ERROR,
+                            "Đặt giá thất bại",
+                            "Số dư không đủ hoặc đang bị khóa. Hãy nạp tiền rồi thử lại.");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Đặt giá thất bại", "Máy chủ phản hồi: " + msg);
+                }
             }
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể kết nối máy chủ: " + e.getMessage());

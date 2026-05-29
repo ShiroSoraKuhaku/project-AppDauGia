@@ -85,6 +85,12 @@
     -fx-text-fill: #999999;
 }
 
+.wallet-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2f3542;
+}
+
 /* =====================================================
    PRODUCT CARD (menu_bidder)
    ===================================================== */
