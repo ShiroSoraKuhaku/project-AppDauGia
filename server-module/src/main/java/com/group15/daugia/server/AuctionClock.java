@@ -83,11 +83,37 @@ public class AuctionClock {
   // Callback: auction bắt đầu
   // -----------------------------------------------------------------------
   private void onAuctionStart(int auctionId) {
+    handleAuctionStart(auctionId);
+  }
+
+  // -----------------------------------------------------------------------
+  // Callback: auction kết thúc
+  // -----------------------------------------------------------------------
+  private void onAuctionEnd(int auctionId) {
+    handleAuctionEnd(auctionId, false);
+  }
+
+  // -----------------------------------------------------------------------
+  // Admin helpers: mở/đóng ngay lập tức
+  // -----------------------------------------------------------------------
+  public JSONAuctionTemp forceStartNow(int auctionId) {
+    JSONAuctionTemp snap = handleAuctionStart(auctionId);
+    if (snap != null) {
+      scheduleAuction(snap, LocalDateTime.now());
+    }
+    return snap;
+  }
+
+  public JSONAuctionTemp forceEndNow(int auctionId) {
+    return handleAuctionEnd(auctionId, true);
+  }
+
+  private JSONAuctionTemp handleAuctionStart(int auctionId) {
     boolean updated = dao.markAuctionStarted(auctionId, LocalDateTime.now());
-    if (!updated) return; // đã bị cancel hoặc trạng thái không hợp lệ
+    if (!updated) return null; // đã bị cancel hoặc trạng thái không hợp lệ
 
     JSONAuctionTemp snap = dao.getAuctionSnapshot(auctionId);
-    if (snap == null) return;
+    if (snap == null) return null;
 
     JSONAuctionEventTemp event = new JSONAuctionEventTemp();
     event.setEventType("AUCTION_STARTED");
@@ -101,20 +127,25 @@ public class AuctionClock {
 
     svc.broadcast(auctionId, event);
     System.out.println("[AuctionClock] Auction " + auctionId + " STARTED.");
+    return snap;
   }
 
-  // -----------------------------------------------------------------------
-  // Callback: auction kết thúc
-  // -----------------------------------------------------------------------
-  private void onAuctionEnd(int auctionId) {
+  private JSONAuctionTemp handleAuctionEnd(int auctionId, boolean cancelScheduledJob) {
     boolean updated = dao.markAuctionEnded(auctionId, LocalDateTime.now());
-    if (!updated) return;
+    if (!updated) return null;
+
+    if (cancelScheduledJob) {
+      ScheduledFuture<?> old = endJobs.remove(auctionId);
+      if (old != null) {
+        old.cancel(false);
+      }
+    }
 
     // Settle: trừ tiền winner, release tất cả holds
     dao.settleAuction(auctionId);
 
     JSONAuctionTemp snap = dao.getAuctionSnapshot(auctionId);
-    if (snap == null) return;
+    if (snap == null) return null;
 
     JSONAuctionEventTemp event = new JSONAuctionEventTemp();
     event.setEventType("AUCTION_ENDED");
@@ -130,6 +161,7 @@ public class AuctionClock {
     endJobs.remove(auctionId);
     System.out.println(
         "[AuctionClock] Auction " + auctionId + " ENDED. Winner: " + snap.getCurLeader());
+    return snap;
   }
 
   // -----------------------------------------------------------------------

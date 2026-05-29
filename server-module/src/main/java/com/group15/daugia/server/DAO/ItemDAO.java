@@ -47,13 +47,16 @@ public class ItemDAO {
   public String updateItem(
       int id,
       String sellerUsername,
+      boolean isAdmin,
       String name,
       double price,
       String desc,
       String startTime,
       String endTime) {
     String itemSql =
-        "update items set name = ?, price = ?, `desc` = ? where id = ? and seller_username = ?";
+        isAdmin
+            ? "update items set name = ?, price = ?, `desc` = ? where id = ?"
+            : "update items set name = ?, price = ?, `desc` = ? where id = ? and seller_username = ?";
     String auctionSql =
         "update auctions set title = ?, start_price = ?, start_time = ?, end_time = ?, "
             + "version = version + 1 where item_id = ?";
@@ -69,7 +72,9 @@ public class ItemDAO {
         statement.setDouble(2, price);
         statement.setString(3, desc);
         statement.setInt(4, id);
-        statement.setString(5, sellerUsername);
+        if (!isAdmin) {
+          statement.setString(5, sellerUsername);
+        }
 
         if (statement.executeUpdate() != 1) {
           conn.rollback();

@@ -13,6 +13,8 @@ public class Work {
     works.put("LOGIN", new LoginWorker());
     works.put("RM-TOKEN", new LogoutWorker());
     works.put("SIGNUP", new SignupWorker());
+    works.put("BAN-USER", new BanUserWorker());
+    works.put("GET-USERS", new GetUsersWorker());
 
     // Item-related worker
     works.put("SELL-ITEM", new SellItemWorker());
@@ -28,6 +30,8 @@ public class Work {
     works.put("GET-AUCTION-STATE", new GetAuctionStateWorker());
     works.put("SET-AUTO-BID", new AutoBidWorker());
     works.put("CANCEL-AUCTION", new CancelAuctionWorker());
+    works.put("OPEN-AUCTION", new OpenAuctionWorker());
+    works.put("CLOSE-AUCTION", new CloseAuctionWorker());
     works.put("CANCEL-BID", new CancelBidWorker());
 
     // Topup worker
