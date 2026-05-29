@@ -1,14 +1,18 @@
 package com.group15.daugia.server.DAO;
 
 import com.group15.daugia.server.resource.DBProperty;
+import com.group15.daugia.shared.JSON.JSONUserInfoTemp;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class UserDAO {
   public static final long TOKEN_IDLE_MINUTES = 15;
   public static final String LOGIN_CONFLICT = "LOGIN_CONFLICT";
+  public static final String LOGIN_BANNED = "LOGIN_BANNED";
 
   private static UserDAO instance;
 
@@ -22,7 +26,8 @@ public class UserDAO {
   }
 
   public String[] checkLogin(String username, String password) {
-    String sqlCheckCommand = "select username, role from user where username = ? and password = ?";
+    String sqlCheckCommand =
+        "select username, role, is_banned from user where username = ? and password = ?";
     String sqlCheckTokenCommand =
         "select token from tokens where username = ? and last_accessed >= DATE_SUB(NOW(), INTERVAL ? MINUTE)";
     String sqlDeleteTokenCommand =
@@ -41,6 +46,10 @@ public class UserDAO {
       try (ResultSet resultSet = statement1.executeQuery()) {
         if (!resultSet.next()) {
           return null;
+        }
+
+        if (resultSet.getBoolean("is_banned")) {
+          return new String[] {LOGIN_BANNED, null, null};
         }
 
         try (PreparedStatement cleanup = conn.prepareStatement(sqlDeleteTokenCommand)) {
@@ -115,10 +124,12 @@ public class UserDAO {
     }
   }
 
-  public String getUsernameByToken(String token){
+  public String getUsernameByToken(String token) {
     String sqlDelete =
         "delete from tokens where token = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
-    String sqlSelect = "select username from tokens where token = ?";
+    String sqlSelect =
+        "select u.username from tokens t join user u on t.username = u.username "
+            + "where t.token = ? and u.is_banned = false";
     String sqlTouch = "update tokens set last_accessed = NOW() where token = ?";
 
     DBProperty dbProperty = DBProperty.getInstance();
@@ -154,7 +165,8 @@ public class UserDAO {
 
   public String getRoleByToken(String token) {
     String sql =
-        "select u.role from user u join tokens t on t.username = u.username where t.token = ?";
+        "select u.role from user u join tokens t on t.username = u.username "
+            + "where t.token = ? and u.is_banned = false";
     String sqlDelete =
         "delete from tokens where token = ? and last_accessed < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
     String sqlTouch = "update tokens set last_accessed = NOW() where token = ?";
@@ -313,6 +325,81 @@ public class UserDAO {
       } finally {
         conn.setAutoCommit(true);
       }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String banUser(String username) {
+      String sqlFind = "select role, is_banned from user where username = ?";
+      String sqlBan = "update user set is_banned = true where username = ?";
+      String sqlDeleteTokens = "delete from tokens where username = ?";
+
+      DBProperty dbProperty = DBProperty.getInstance();
+      try (Connection conn =
+          DriverManager.getConnection(
+              dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
+        conn.setAutoCommit(false);
+        try (PreparedStatement find = conn.prepareStatement(sqlFind)) {
+          find.setString(1, username);
+          try (ResultSet rs = find.executeQuery()) {
+            if (!rs.next()) {
+              conn.rollback();
+              return "NOT_FOUND";
+            }
+            String role = rs.getString("role");
+            if ("ADMIN".equalsIgnoreCase(role)) {
+              conn.rollback();
+              return "FORBIDDEN";
+            }
+            if (rs.getBoolean("is_banned")) {
+              conn.rollback();
+              return "ALREADY_BANNED";
+            }
+          }
+        }
+
+        try (PreparedStatement ban = conn.prepareStatement(sqlBan)) {
+          ban.setString(1, username);
+          if (ban.executeUpdate() != 1) {
+            conn.rollback();
+            return "NOT_FOUND";
+          }
+        }
+
+        try (PreparedStatement delete = conn.prepareStatement(sqlDeleteTokens)) {
+          delete.setString(1, username);
+          delete.executeUpdate();
+        }
+
+        conn.commit();
+        return "OK";
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+  public List<JSONUserInfoTemp> getAllUsers() {
+    String sql =
+        "select username, role, balance, locked_balance, is_banned from user order by username";
+    List<JSONUserInfoTemp> users = new ArrayList<>();
+
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement = conn.prepareStatement(sql);
+        ResultSet resultSet = statement.executeQuery()) {
+      while (resultSet.next()) {
+        JSONUserInfoTemp user = new JSONUserInfoTemp();
+        user.setUsername(resultSet.getString("username"));
+        user.setRole(resultSet.getString("role"));
+        user.setBalance(resultSet.getDouble("balance"));
+        user.setLockedBalance(resultSet.getDouble("locked_balance"));
+        user.setBanned(resultSet.getBoolean("is_banned"));
+        users.add(user);
+      }
+      return users;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

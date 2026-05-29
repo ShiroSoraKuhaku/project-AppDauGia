@@ -32,6 +32,10 @@ public class LoginWorker implements Workable {
       JSONUserTemp ans = new JSONUserTemp();
       ans.setResponse("409 Conflict");
       answer = gson.toJson(ans);
+    } else if (UserDAO.LOGIN_BANNED.equals(token[0])) {
+      JSONUserTemp ans = new JSONUserTemp();
+      ans.setResponse("403 Forbidden");
+      answer = gson.toJson(ans);
     } else {
       JSONUserTemp loggedUser = new JSONUserTemp();
       loggedUser.setResponse("201 Created");

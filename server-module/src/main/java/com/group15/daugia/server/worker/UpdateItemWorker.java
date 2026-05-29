@@ -14,14 +14,14 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * UPDATE-ITEM: cập nhật thông tin item và lịch auction liên quan.
+ * UPDATE-ITEM: cập nhật thông tin item và lịch auction liên quan (seller hoặc admin).
  *
  * <p>Request JSON: { "id": 1, "token": "...", "name": "...", "price": 100.0, "desc": "...",
  * "startTime": "yyyy-MM-dd HH:mm:ss", "endTime": "yyyy-MM-dd HH:mm:ss" }
  * <p>Response JSON: { "response": "200 OK" }
  *   { "response": "400 Bad Request" } nếu dữ liệu không hợp lệ
  *   { "response": "401 Unauthorized" } nếu token sai
- *   { "response": "404 Not Found" } nếu item không thuộc về seller
+ *   { "response": "404 Not Found" } nếu item không tồn tại hoặc không thuộc về seller
  */
 public class UpdateItemWorker implements Workable {
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -38,6 +38,8 @@ public class UpdateItemWorker implements Workable {
     }
 
     String sellerUsername = UserDAO.getUserDao().getUsernameByToken(item.getToken());
+    String role = UserDAO.getUserDao().getRoleByToken(item.getToken());
+    boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
     LocalDateTime startTime = parseTime(item.getStartTime());
     LocalDateTime endTime = parseTime(item.getEndTime());
 
@@ -57,6 +59,7 @@ public class UpdateItemWorker implements Workable {
               .updateItem(
                   item.getId(),
                   sellerUsername,
+                  isAdmin,
                   item.getName(),
                   item.getPrice(),
                   item.getDesc(),
