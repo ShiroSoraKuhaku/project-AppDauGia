@@ -1,82 +1,206 @@
 package com.group15.daugia.client.controller;
 
 import com.google.gson.Gson;
-import com.group15.daugia.client.model.User;
+import com.group15.daugia.client.model.SessionManager;
 import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.shared.JSON.JSONItemListTemp;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 import com.group15.daugia.shared.model.BaseItem;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class MenuBidderController implements Initializable {
-  @FXML private TableView<BaseItem> table;
-  @FXML private TableColumn<BaseItem, String> table_name;
-  @FXML private TableColumn<BaseItem, String> table_description;
-  @FXML private TableColumn<BaseItem, Double> table_price;
-  @FXML private TableColumn<BaseItem, String> table_start_time;
-  @FXML private TableColumn<BaseItem, String> table_end_time;
 
-  private ObservableList<BaseItem> items;
-  private final Gson gson = new Gson();
+    @FXML private FlowPane cardPane;
+    @FXML private Label lblSubtitle;
 
-  @Override
-  public void initialize(URL url, ResourceBundle resourceBundle) {
-    table_name.setCellValueFactory(new PropertyValueFactory<>("name"));
-    table_description.setCellValueFactory(new PropertyValueFactory<>("description"));
-    table_price.setCellValueFactory(new PropertyValueFactory<>("price"));
-    table_start_time.setCellValueFactory(new PropertyValueFactory<>("startTime"));
-    table_end_time.setCellValueFactory(new PropertyValueFactory<>("endTime"));
+    private final Gson gson = new Gson();
+    private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
 
-    items = FXCollections.observableArrayList();
-    table.setItems(items);
-    loadItems();
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        loadItems();
+    }
 
-    table.setRowFactory(
-        tv -> {
-          TableRow<BaseItem> row = new TableRow<>();
-          row.setOnMouseClicked(
-              event -> {
-                if (event.getClickCount() == 2 && !row.isEmpty()) {
-                  BaseItem selectedItem = row.getItem();
-                  System.out.println("Đang vào phòng đấu giá: " + selectedItem.getName());
-                  SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
-                }
-              });
-          return row;
+    @FXML
+    private void handleRefresh() {
+        loadItems();
+    }
+
+    // -----------------------------------------------------------------------
+    // Load dữ liệu từ server
+    // -----------------------------------------------------------------------
+    private void loadItems() {
+        cardPane.getChildren().clear();
+        lblSubtitle.setText("Đang tải...");
+
+        List<BaseItem> items = fetchItems();
+        if (items.isEmpty()) {
+            lblSubtitle.setText("Không có sản phẩm nào.");
+            return;
+        }
+
+        lblSubtitle.setText(items.size() + " sản phẩm");
+        for (BaseItem item : items) {
+            cardPane.getChildren().add(buildCard(item));
+        }
+    }
+
+    private List<BaseItem> fetchItems() {
+        List<BaseItem> result = new ArrayList<>();
+        try {
+            String token = SessionManager.getToken() != null ? SessionManager.getToken() : "";
+            String data = ShortConnectNetwork.shortReq("GET-ITEMS", "{\"token\":\"" + token + "\"}");
+            JSONItemListTemp answer = gson.fromJson(data, JSONItemListTemp.class);
+
+            if (answer == null || answer.getItemList() == null) {
+                return result;
+            }
+
+            for (JSONItemTemp item : answer.getItemList()) {
+                BaseItem base = new BaseItem(
+                        String.valueOf(item.getId()),
+                        item.getName(),
+                        item.getPrice(),
+                        item.getDesc(),
+                        item.getStartTime(),
+                        item.getEndTime());
+                base.setAuctionId(item.getId()); // auctionId = itemId theo cấu trúc hiện tại
+                base.setSeller(item.getSellerUsername());
+                base.setCurPrice(item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice());
+                base.setSecondsRemaining(item.getSecondsRemaining());
+                base.setStatus(item.getStatus());
+                result.add(base);
+            }
+        } catch (Exception e) {
+            System.err.println("[MenuBidderController] Lỗi khi tải sản phẩm: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // -----------------------------------------------------------------------
+    // Build product card
+    // -----------------------------------------------------------------------
+    private VBox buildCard(BaseItem item) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("product-card");
+        card.setPrefWidth(220);
+        card.setMaxWidth(220);
+
+        // ---- Header: tên + badge trạng thái ----
+        HBox headerRow = new HBox(8);
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblName = new Label(item.getName());
+        lblName.getStyleClass().add("product-card-name");
+        lblName.setWrapText(true);
+        lblName.setMaxWidth(140);
+
+        Label badge = buildStatusBadge(item.getStatus());
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        headerRow.getChildren().addAll(lblName, spacer, badge);
+
+        // ---- Người bán ----
+        String sellerText = item.getSeller() != null ? "Người bán: " + item.getSeller() : "Người bán: —";
+        Label lblSeller = new Label(sellerText);
+        lblSeller.getStyleClass().add("product-card-seller");
+
+        // ---- Divider ----
+        Pane divider = new Pane();
+        divider.getStyleClass().add("product-card-divider");
+        divider.setMinHeight(1);
+
+        // ---- Giá hiện tại ----
+        Label lblPriceKey = new Label("Giá hiện tại");
+        lblPriceKey.getStyleClass().add("product-card-price-label");
+
+        double displayPrice = item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice();
+        Label lblPriceVal = new Label(VND.format((long) displayPrice) + " ₫");
+        lblPriceVal.getStyleClass().add("product-card-price-value");
+
+        // ---- Thời gian còn lại ----
+        Label lblTimeKey = new Label("Thời gian còn lại");
+        lblTimeKey.getStyleClass().add("product-card-time-label");
+
+        Label lblTimeVal = new Label(formatSeconds(item.getSecondsRemaining(), item.getStatus()));
+        lblTimeVal.getStyleClass().add("product-card-time-value");
+
+        card.getChildren().addAll(
+                headerRow, lblSeller, divider,
+                lblPriceKey, lblPriceVal,
+                lblTimeKey, lblTimeVal);
+
+        // ---- Click handler ----
+        card.setOnMouseClicked(e -> {
+            System.out.println("[MenuBidder] Vào phòng đấu giá: " + item.getName()
+                    + " (auctionId=" + item.getAuctionId() + ")");
+            BiddingController controller =
+                    SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
+            if (controller != null) {
+                controller.setAuction(item.getAuctionId(), item.getName());
+            }
         });
-  }
 
-  private void loadItems() {
-    String user = User.getUsername();
-
-    String data = ShortConnectNetwork.shortReq("GET-ITEMS", "{}");
-    JSONItemListTemp answer = gson.fromJson(data, JSONItemListTemp.class);
-
-    items.clear();
-    if (answer == null || answer.getItemList() == null) {
-      return;
+        return card;
     }
 
-    for (JSONItemTemp item : answer.getItemList()) {
-      items.add(
-          new BaseItem(
-              String.valueOf(item.getId()),
-              item.getName(),
-              item.getPrice(),
-              item.getDesc(),
-              item.getStartTime(),
-              item.getEndTime()));
+    private Label buildStatusBadge(String status) {
+        Label badge = new Label();
+        if (status == null) {
+            badge.setText("—");
+            badge.getStyleClass().add("badge-scheduled");
+            return badge;
+        }
+        switch (status.toUpperCase()) {
+            case "ACTIVE":
+                badge.setText("● Đang đấu");
+                badge.getStyleClass().add("badge-active");
+                break;
+            case "SCHEDULED":
+                badge.setText("Sắp diễn ra");
+                badge.getStyleClass().add("badge-scheduled");
+                break;
+            case "ENDED":
+                badge.setText("Đã kết thúc");
+                badge.getStyleClass().add("badge-ended");
+                break;
+            case "CANCELLED":
+                badge.setText("Đã hủy");
+                badge.getStyleClass().add("badge-cancelled");
+                break;
+            default:
+                badge.setText(status);
+                badge.getStyleClass().add("badge-scheduled");
+        }
+        return badge;
     }
-  }
+
+    private String formatSeconds(long seconds, String status) {
+        if ("ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
+            return "Đã kết thúc";
+        }
+        if (seconds <= 0) return "—";
+        long h = seconds / 3600;
+        long m = (seconds % 3600) / 60;
+        long s = seconds % 60;
+        if (h > 0) return String.format("%dh %02dm %02ds", h, m, s);
+        if (m > 0) return String.format("%dm %02ds", m, s);
+        return String.format("%ds", s);
+    }
 }
