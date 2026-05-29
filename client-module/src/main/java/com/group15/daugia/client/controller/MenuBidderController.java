@@ -7,6 +7,8 @@ import com.group15.daugia.client.util.SceneChanger;
 import com.group15.daugia.shared.JSON.JSONItemListTemp;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 import com.group15.daugia.shared.model.BaseItem;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -15,6 +17,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.text.NumberFormat;
@@ -30,30 +33,40 @@ public class MenuBidderController implements Initializable {
 
     private final Gson gson = new Gson();
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
+    private Timeline autoRefreshTimeline;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        loadItems();
+        loadItems(true);
+        startAutoRefresh();
+        cardPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                stopAutoRefresh();
+            }
+        });
     }
 
     @FXML
     private void handleRefresh() {
-        loadItems();
+        loadItems(true);
     }
 
     // -----------------------------------------------------------------------
     // Load dữ liệu từ server
     // -----------------------------------------------------------------------
-    private void loadItems() {
-        cardPane.getChildren().clear();
-        lblSubtitle.setText("Đang tải...");
+    private void loadItems(boolean showLoading) {
+        if (showLoading) {
+            lblSubtitle.setText("Đang tải...");
+        }
 
         List<BaseItem> items = fetchItems();
         if (items.isEmpty()) {
+            cardPane.getChildren().clear();
             lblSubtitle.setText("Không có sản phẩm nào.");
             return;
         }
 
+        cardPane.getChildren().clear();
         lblSubtitle.setText(items.size() + " sản phẩm");
         for (BaseItem item : items) {
             cardPane.getChildren().add(buildCard(item));
@@ -82,7 +95,10 @@ public class MenuBidderController implements Initializable {
                 base.setAuctionId(item.getId()); // auctionId = itemId theo cấu trúc hiện tại
                 base.setSeller(item.getSellerUsername());
                 base.setCurPrice(item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice());
-                base.setSecondsRemaining(item.getSecondsRemaining());
+                long displaySeconds = "SCHEDULED".equalsIgnoreCase(item.getStatus())
+                        ? item.getSecondsToStart()
+                        : item.getSecondsRemaining();
+                base.setSecondsRemaining(displaySeconds);
                 base.setStatus(item.getStatus());
                 result.add(base);
             }
@@ -135,7 +151,10 @@ public class MenuBidderController implements Initializable {
         lblPriceVal.getStyleClass().add("product-card-price-value");
 
         // ---- Thời gian còn lại ----
-        Label lblTimeKey = new Label("Thời gian còn lại");
+        String timeKey = "SCHEDULED".equalsIgnoreCase(item.getStatus())
+                ? "Bắt đầu sau"
+                : "Thời gian còn lại";
+        Label lblTimeKey = new Label(timeKey);
         lblTimeKey.getStyleClass().add("product-card-time-label");
 
         Label lblTimeVal = new Label(formatSeconds(item.getSecondsRemaining(), item.getStatus()));
@@ -195,12 +214,30 @@ public class MenuBidderController implements Initializable {
         if ("ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
             return "Đã kết thúc";
         }
-        if (seconds <= 0) return "—";
+        if (seconds <= 0) {
+            return "SCHEDULED".equalsIgnoreCase(status) ? "Sắp bắt đầu" : "—";
+        }
         long h = seconds / 3600;
         long m = (seconds % 3600) / 60;
         long s = seconds % 60;
         if (h > 0) return String.format("%dh %02dm %02ds", h, m, s);
         if (m > 0) return String.format("%dm %02ds", m, s);
         return String.format("%ds", s);
+    }
+
+    private void startAutoRefresh() {
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+        }
+        autoRefreshTimeline =
+                new Timeline(new KeyFrame(Duration.seconds(10), e -> loadItems(false)));
+        autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        autoRefreshTimeline.play();
+    }
+
+    private void stopAutoRefresh() {
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+        }
     }
 }

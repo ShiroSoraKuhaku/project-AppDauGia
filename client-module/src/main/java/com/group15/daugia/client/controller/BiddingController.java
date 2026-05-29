@@ -63,6 +63,8 @@ public class BiddingController implements Initializable {
     private ScheduledFuture<?> countdownTask;
     private final AtomicLong remainingSeconds = new AtomicLong(0);
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
+    private String currentStatus;
+    private boolean countingToStart = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -125,14 +127,33 @@ public class BiddingController implements Initializable {
             lblProductTitle.setText(s.getTitle());
         }
 
-        applyStatus(s.getStatus());
+        String status = s.getStatus();
+        applyStatus(status);
         lblStartPrice.setText(formatVnd(s.getStartPrice()));
         lblCurPrice.setText(formatVnd(s.getCurPrice() > 0 ? s.getCurPrice() : s.getStartPrice()));
         lblLeader.setText(s.getCurLeader() != null ? s.getCurLeader() : "—");
 
-        long secs = s.getSecondsRemaining() > 0 ? s.getSecondsRemaining() : 0;
-        remainingSeconds.set(secs);
-        startCountdown();
+        if ("SCHEDULED".equalsIgnoreCase(status)) {
+            long secsToStart = Math.max(0, s.getSecondsToStart());
+            countingToStart = true;
+            remainingSeconds.set(secsToStart);
+            if (secsToStart > 0) {
+                startCountdown();
+            } else {
+                stopCountdown();
+                lblCountdown.setText("Sắp bắt đầu");
+            }
+        } else {
+            countingToStart = false;
+            long secs = Math.max(0, s.getSecondsRemaining());
+            remainingSeconds.set(secs);
+            if (isEndedStatus(status)) {
+                stopCountdown();
+                lblCountdown.setText("Đã kết thúc");
+            } else {
+                startCountdown();
+            }
+        }
     }
 
     /** Xử lý push event từ server */
@@ -148,9 +169,16 @@ public class BiddingController implements Initializable {
         }
         if (event.getStatus() != null) {
             applyStatus(event.getStatus());
+            if (isEndedStatus(currentStatus)) {
+                lblCountdown.setText("Đã kết thúc");
+            }
         }
         if (event.getSecondsRemaining() > 0) {
             remainingSeconds.set(event.getSecondsRemaining());
+            countingToStart = false;
+            if (!isEndedStatus(currentStatus)) {
+                startCountdown();
+            }
         }
 
         // Thêm vào lịch sử
@@ -163,6 +191,7 @@ public class BiddingController implements Initializable {
 
     private void applyStatus(String status) {
         if (status == null) return;
+        currentStatus = status;
         lblStatusBadge.setText(statusDisplayText(status));
         lblStatusBadge.getStyleClass().removeAll(
                 "badge-active", "badge-scheduled", "badge-ended", "badge-cancelled");
@@ -195,11 +224,23 @@ public class BiddingController implements Initializable {
             long secs = remainingSeconds.getAndDecrement();
             if (secs < 0) {
                 stopCountdown();
-                Platform.runLater(() -> lblCountdown.setText("Đã kết thúc"));
+                Platform.runLater(() -> {
+                    if (countingToStart && "SCHEDULED".equalsIgnoreCase(currentStatus)) {
+                        lblCountdown.setText("Sắp bắt đầu");
+                    } else {
+                        lblCountdown.setText("Đã kết thúc");
+                    }
+                });
                 return;
             }
             String formatted = formatCountdown(secs);
-            Platform.runLater(() -> lblCountdown.setText(formatted));
+            Platform.runLater(() -> {
+                if (countingToStart && "SCHEDULED".equalsIgnoreCase(currentStatus)) {
+                    lblCountdown.setText("Bắt đầu sau " + formatted);
+                } else {
+                    lblCountdown.setText(formatted);
+                }
+            });
         }, 0, 1, TimeUnit.SECONDS);
     }
 
@@ -394,6 +435,10 @@ public class BiddingController implements Initializable {
             case "CANCELLED": return "Đã hủy";
             default:          return status;
         }
+    }
+
+    private boolean isEndedStatus(String status) {
+        return "ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status);
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

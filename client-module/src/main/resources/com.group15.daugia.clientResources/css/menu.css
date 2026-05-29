@@ -348,3 +348,116 @@
     -fx-text-fill: #1565c0;
     -fx-font-weight: bold;
 }
+
+/* =====================================================
+   SELLER SCREEN
+   ===================================================== */
+.seller-root {
+    -fx-background-color: #f0f4f8;
+}
+
+.seller-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 10, 0, 0, 3);
+    -fx-padding: 16 18;
+}
+
+.seller-panel-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2f3542;
+}
+
+.seller-panel-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7f8c8d;
+}
+
+.seller-item-card {
+    -fx-pref-width: 220;
+    -fx-min-width: 220;
+}
+
+.seller-item-card-selected {
+    -fx-border-color: #4CAF50;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+}
+
+.seller-field-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #7f8c8d;
+    -fx-font-weight: bold;
+}
+
+.seller-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8395a7;
+}
+
+.seller-button-primary {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 18;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+
+.seller-button-primary:hover {
+    -fx-background-color: #43a047;
+}
+
+.seller-button-secondary {
+    -fx-background-color: white;
+    -fx-text-fill: #1565c0;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 18;
+    -fx-background-radius: 7;
+    -fx-border-color: #1e88e5;
+    -fx-border-radius: 7;
+    -fx-cursor: hand;
+}
+
+.seller-button-secondary:hover {
+    -fx-background-color: #e3f2fd;
+}
+
+.seller-button-danger {
+    -fx-background-color: #ff5252;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 18;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+
+.seller-button-danger:hover {
+    -fx-background-color: #e53935;
+}
+
+.quick-time-button {
+    -fx-background-color: white;
+    -fx-text-fill: #2e7d32;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 14;
+    -fx-background-radius: 999;
+    -fx-border-color: #4CAF50;
+    -fx-border-radius: 999;
+    -fx-cursor: hand;
+}
+
+.quick-time-button:hover {
+    -fx-background-color: #f1f8f2;
+}
+
+.seller-empty-state {
+    -fx-text-fill: #7f8c8d;
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+}
