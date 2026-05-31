@@ -28,6 +28,7 @@ public class Work {
     works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());
     works.put("PLACE-BID", new PlaceBidWorker());
     works.put("GET-AUCTION-STATE", new GetAuctionStateWorker());
+    works.put("GET-BID-HISTORY", new GetBidHistoryWorker());
     works.put("SET-AUTO-BID", new AutoBidWorker());
     works.put("CANCEL-AUCTION", new CancelAuctionWorker());
     works.put("OPEN-AUCTION", new OpenAuctionWorker());

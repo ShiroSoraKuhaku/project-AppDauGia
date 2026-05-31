@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -79,6 +82,9 @@
             <Label text="Giá tối đa:" styleClass="auto-bid-label"/>
             <TextField fx:id="txtMaxAmount" promptText="Giá tối đa bạn chấp nhận..."
                        styleClass="bidding-input"/>
+            <Label text="Bước giá tối thiểu:" styleClass="auto-bid-label"/>
+            <TextField fx:id="txtBidStep" promptText="Mặc định: 1.0"
+                       styleClass="bidding-input" prefWidth="140"/>
             <Button text="Xác nhận" onAction="#handleConfirmAutoBid"
                     style="-fx-background-color: #1e88e5; -fx-text-fill: white;
                            -fx-font-weight: bold; -fx-padding: 8 18; -fx-background-radius: 7;
@@ -89,6 +95,19 @@
     </VBox>
 
     <!-- ===== HISTORY PANEL ===== -->
+    <TitledPane text="Biểu đồ giá realtime" expanded="true" animated="false" styleClass="bidding-chart-pane">
+        <content>
+            <LineChart fx:id="priceChart" prefHeight="210" createSymbols="false" legendVisible="true" styleClass="bidding-chart">
+                <xAxis>
+                    <CategoryAxis label="Thời gian"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Giá"/>
+                </yAxis>
+            </LineChart>
+        </content>
+    </TitledPane>
+
     <VBox styleClass="bidding-history-panel" spacing="8" VBox.vgrow="ALWAYS">
         <HBox alignment="CENTER_LEFT" spacing="8">
             <Label text="Lịch sử đấu giá" styleClass="bidding-history-title"/>
