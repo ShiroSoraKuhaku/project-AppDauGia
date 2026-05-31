@@ -43,6 +43,12 @@ public class AutoBidWorker implements Workable {
       return gson.toJson(ans);
     }
 
+    double bidStep = (req.getBidStep() == null) ? 1.0 : req.getBidStep();
+    if (!Double.isFinite(bidStep) || bidStep <= 0) {
+      ans.setResponse("400 Bad Request");
+      return gson.toJson(ans);
+    }
+
     String username = UserDAO.getUserDao().getUsernameByToken(req.getToken());
     if (username == null) {
       ans.setResponse("401 Unauthorized");
@@ -52,7 +58,7 @@ public class AutoBidWorker implements Workable {
     JSONAuctionTemp before = dao.getAuctionSnapshot(req.getAuctionId());
     int oldVersion = before == null ? -1 : before.getVersion();
 
-    String result = dao.setAutoBid(req.getAuctionId(), username, req.getMaxAmount());
+    String result = dao.setAutoBid(req.getAuctionId(), username, req.getMaxAmount(), bidStep);
 
     switch (result) {
       case "OK" -> {
@@ -64,6 +70,7 @@ public class AutoBidWorker implements Workable {
         }
       }
       case "INVALID_INPUT" -> ans.setResponse("400 Bad Request");
+      case "INVALID_BID_STEP" -> ans.setResponse("400 Bad Request");
       case "AUCTION_NOT_FOUND" -> ans.setResponse("404 Not Found");
       case "AUCTION_NOT_ACTIVE" -> ans.setResponse("400 Bad Request");
       case "PRICE_TOO_LOW" -> ans.setResponse("409 Conflict");

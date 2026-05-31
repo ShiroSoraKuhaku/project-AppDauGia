@@ -26,7 +26,9 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -40,15 +42,21 @@ public class MenuBidderController implements Initializable {
     private final Gson gson = new Gson();
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
     private Timeline autoRefreshTimeline;
+    private Timeline countdownTimeline;
+    private final Map<Integer, Long> localCountdowns = new HashMap<>();
+    private final Map<Integer, Label> countdownLabels = new HashMap<>();
+    private final Map<Integer, String> auctionStatuses = new HashMap<>();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         refreshBalanceLabel();
         loadItems(true);
         startAutoRefresh();
+        startLocalCountdown();
         cardPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene == null) {
                 stopAutoRefresh();
+                stopLocalCountdown();
             }
         });
     }
@@ -77,6 +85,8 @@ public class MenuBidderController implements Initializable {
         cardPane.getChildren().clear();
         lblSubtitle.setText(items.size() + " sản phẩm");
         for (BaseItem item : items) {
+            localCountdowns.put(item.getAuctionId(), Math.max(0, item.getSecondsRemaining()));
+            auctionStatuses.put(item.getAuctionId(), item.getStatus());
             cardPane.getChildren().add(buildCard(item));
         }
     }
@@ -230,6 +240,7 @@ public class MenuBidderController implements Initializable {
 
         Label lblTimeVal = new Label(formatSeconds(item.getSecondsRemaining(), item.getStatus()));
         lblTimeVal.getStyleClass().add("product-card-time-value");
+        countdownLabels.put(item.getAuctionId(), lblTimeVal);
 
         card.getChildren().addAll(
                 headerRow, lblSeller, divider,
@@ -306,9 +317,45 @@ public class MenuBidderController implements Initializable {
         autoRefreshTimeline.play();
     }
 
+    private void startLocalCountdown() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> tickCountdowns()));
+        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+        countdownTimeline.play();
+    }
+
+    private void tickCountdowns() {
+        for (Map.Entry<Integer, Label> entry : countdownLabels.entrySet()) {
+            Integer auctionId = entry.getKey();
+            Label label = entry.getValue();
+            String status = auctionStatuses.getOrDefault(auctionId, "");
+            if ("ENDED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) {
+                label.setText("Đã kết thúc");
+                continue;
+            }
+            if (!"ACTIVE".equalsIgnoreCase(status) && !"SCHEDULED".equalsIgnoreCase(status)) {
+                continue;
+            }
+            long cur = localCountdowns.getOrDefault(auctionId, 0L);
+            if (cur > 0) {
+                localCountdowns.put(auctionId, cur - 1);
+            }
+            long display = localCountdowns.getOrDefault(auctionId, 0L);
+            label.setText(formatSeconds(display, status));
+        }
+    }
+
     private void stopAutoRefresh() {
         if (autoRefreshTimeline != null) {
             autoRefreshTimeline.stop();
+        }
+    }
+
+    private void stopLocalCountdown() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
         }
     }
 

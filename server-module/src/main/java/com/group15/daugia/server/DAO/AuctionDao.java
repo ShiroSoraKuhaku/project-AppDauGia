@@ -2,6 +2,7 @@ package com.group15.daugia.server.DAO;
 
 import com.group15.daugia.server.resource.DBProperty;
 import com.group15.daugia.shared.JSON.JSONAuctionTemp;
+import com.group15.daugia.shared.JSON.JSONBidHistoryTemp;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -336,6 +337,30 @@ public class AuctionDao {
   // -----------------------------------------------------------------------
   public JSONAuctionTemp getAuctionSnapshot(int auctionId) {
     return findAuctionById(auctionId);
+  }
+
+  public List<JSONBidHistoryTemp.BidRecord> getRecentBids(int auctionId, int limit) {
+    String sql =
+        "SELECT bidder_username, bid_amount, created_at FROM auction_bids "
+            + "WHERE auction_id = ? ORDER BY created_at DESC, id DESC LIMIT ?";
+    List<JSONBidHistoryTemp.BidRecord> bids = new ArrayList<>();
+    try (Connection conn = getConn(); PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, auctionId);
+      ps.setInt(2, Math.max(1, limit));
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          JSONBidHistoryTemp.BidRecord bid = new JSONBidHistoryTemp.BidRecord();
+          bid.setBidderUsername(rs.getString("bidder_username"));
+          bid.setBidAmount(rs.getDouble("bid_amount"));
+          Timestamp createdAt = rs.getTimestamp("created_at");
+          bid.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime().format(FMT) : null);
+          bids.add(bid);
+        }
+      }
+      return bids;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -727,17 +752,18 @@ public class AuctionDao {
   // -----------------------------------------------------------------------
   // setAutoBid
   // -----------------------------------------------------------------------
-  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount) {
+  public String setAutoBid(int auctionId, String bidderUsername, double maxAmount, double bidStep) {
     if (auctionId <= 0 || bidderUsername == null || bidderUsername.isBlank()
-        || !Double.isFinite(maxAmount) || maxAmount <= 0) {
+        || !Double.isFinite(maxAmount) || maxAmount <= 0
+        || !Double.isFinite(bidStep) || bidStep <= 0) {
       return "INVALID_INPUT";
     }
 
     String checkSql = "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
     String upsertSql =
-        "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, active) "
-            + "VALUES (?, ?, ?, true) "
-            + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), active = true";
+        "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, bid_step, active) "
+            + "VALUES (?, ?, ?, ?, true) "
+            + "ON DUPLICATE KEY UPDATE max_amount = VALUES(max_amount), bid_step = VALUES(bid_step), active = true";
 
     try (Connection conn = getConn()) {
       conn.setAutoCommit(false);
@@ -758,7 +784,10 @@ public class AuctionDao {
         if (maxAmount <= curPrice) { conn.rollback(); return "PRICE_TOO_LOW"; }
 
         try (PreparedStatement ps = conn.prepareStatement(upsertSql)) {
-          ps.setInt(1, auctionId); ps.setString(2, bidderUsername); ps.setDouble(3, maxAmount);
+          ps.setInt(1, auctionId);
+          ps.setString(2, bidderUsername);
+          ps.setDouble(3, maxAmount);
+          ps.setDouble(4, bidStep);
           ps.executeUpdate();
         }
 
@@ -785,8 +814,15 @@ public class AuctionDao {
   }
 
   private static class AutoBidCandidate {
-    String username; double maxAmount;
-    AutoBidCandidate(String u, double m) { username = u; maxAmount = m; }
+    String username;
+    double maxAmount;
+    double bidStep;
+
+    AutoBidCandidate(String u, double m, double s) {
+      username = u;
+      maxAmount = m;
+      bidStep = s;
+    }
   }
 
   public boolean hasActiveAutoBids(int auctionId) {
@@ -811,7 +847,7 @@ public class AuctionDao {
   private List<AutoBidCandidate> findTopAutoBidCandidates(
       Connection conn, int auctionId, double currentPrice) throws SQLException {
     String sql =
-        "SELECT bidder_username, max_amount FROM auction_auto_bids "
+        "SELECT bidder_username, max_amount, bid_step FROM auction_auto_bids "
             + "WHERE auction_id = ? AND active = true AND max_amount >= ? "
             + "ORDER BY max_amount DESC, updated_at ASC LIMIT 2";
     List<AutoBidCandidate> candidates = new ArrayList<>();
@@ -819,7 +855,11 @@ public class AuctionDao {
       ps.setInt(1, auctionId); ps.setDouble(2, currentPrice);
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next())
-          candidates.add(new AutoBidCandidate(rs.getString("bidder_username"), rs.getDouble("max_amount")));
+          candidates.add(
+              new AutoBidCandidate(
+                  rs.getString("bidder_username"),
+                  rs.getDouble("max_amount"),
+                  rs.getDouble("bid_step")));
       }
     }
     return candidates;
@@ -854,9 +894,11 @@ public class AuctionDao {
     AutoBidCandidate winner = candidates.get(0);
     if (winner.username.equals(current.curLeader) && candidates.size() == 1) return;
 
-    double minNextBid = current.curPrice + DEFAULT_BID_STEP;
+    double winnerStep = winner.bidStep > 0 ? winner.bidStep : DEFAULT_BID_STEP;
+    if (winnerStep > (winner.maxAmount - current.curPrice)) return;
+    double minNextBid = current.curPrice + winnerStep;
     double secondLimit = candidates.size() > 1 ? candidates.get(1).maxAmount : current.curPrice;
-    double targetAmount = Math.max(minNextBid, secondLimit + DEFAULT_BID_STEP);
+    double targetAmount = Math.max(minNextBid, secondLimit + winnerStep);
     double bidAmount = Math.min(winner.maxAmount, targetAmount);
 
     if (bidAmount <= current.curPrice) return;
