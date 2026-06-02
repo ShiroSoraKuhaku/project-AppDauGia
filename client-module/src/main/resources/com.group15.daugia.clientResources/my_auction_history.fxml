@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="0" prefWidth="860" prefHeight="520"
+      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.group15.daugia.client.controller.MyAuctionHistoryController"
+      styleClass="bidding-root"
+      stylesheets="@css/menu.css">
+
+    <!-- Header bar -->
+    <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-background-color: white;
+            -fx-border-color: #dfe4ea; -fx-border-width: 0 0 1 0;">
+        <padding>
+            <Insets top="14" right="20" bottom="14" left="20"/>
+        </padding>
+        <VBox spacing="2">
+            <Label text="Lịch sử đấu giá của tôi" styleClass="section-title"/>
+            <Label fx:id="lblSubtitle" text="Đang tải..." styleClass="section-subtitle"/>
+        </VBox>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="↩ Quay lại" onAction="#handleBack" styleClass="menu-button-secondary"/>
+        <Button text="↻ Làm mới" onAction="#handleRefresh" styleClass="menu-button-secondary"/>
+    </HBox>
+
+    <!-- Table -->
+    <TableView fx:id="tblHistory" VBox.vgrow="ALWAYS" styleClass="admin-table">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colTitle" text="Tên phiên đấu giá" prefWidth="220"/>
+            <TableColumn fx:id="colStatus" text="Trạng thái" prefWidth="110"/>
+            <TableColumn fx:id="colCurPrice" text="Giá hiện tại" prefWidth="130"/>
+            <TableColumn fx:id="colMyBid" text="Giá tôi đã đặt" prefWidth="130"/>
+            <TableColumn fx:id="colLeader" text="Người dẫn đầu" prefWidth="140"/>
+            <TableColumn fx:id="colEndTime" text="Kết thúc" prefWidth="160"/>
+        </columns>
+    </TableView>
+</VBox>

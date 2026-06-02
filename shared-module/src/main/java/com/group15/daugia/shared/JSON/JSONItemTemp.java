@@ -16,6 +16,9 @@ public class JSONItemTemp extends JSONTemp {
 
   private String sellerUsername;
 
+  /** Tên tìm kiếm (LIKE filter), dùng trong GET-ITEMS request */
+  private String nameFilter;
+
   public int getId() {
     return id;
   }
@@ -110,5 +113,13 @@ public class JSONItemTemp extends JSONTemp {
 
   public void setSellerUsername(String sellerUsername) {
     this.sellerUsername = sellerUsername;
+  }
+
+  public String getNameFilter() {
+    return nameFilter;
+  }
+
+  public void setNameFilter(String nameFilter) {
+    this.nameFilter = nameFilter;
   }
 }

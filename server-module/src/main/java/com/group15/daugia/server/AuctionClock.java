@@ -174,7 +174,11 @@ public class AuctionClock {
     long secsLeft = snap.getSecondsRemaining();
     if (secsLeft > EXTEND_THRESHOLD_SECS) return; // không cần gia hạn
 
-    LocalDateTime newEnd = LocalDateTime.now().plusSeconds(EXTEND_AMOUNT_SECS);
+    // Tính toán khoảng thời gian gia hạn dựa trên thời gian còn lại
+    // Nếu còn < 5 giây, gia hạn 3 giây; nếu 5-30 giây, gia hạn 10 giây
+    long extendSecs = (secsLeft < 5) ? 3 : 10;
+    
+    LocalDateTime newEnd = LocalDateTime.now().plusSeconds(extendSecs);
     boolean extended = dao.extendAuctionEndTime(auctionId, newEnd, snap.getVersion());
     if (!extended) return; // race condition – bỏ qua
 

@@ -330,6 +330,73 @@ public class UserDAO {
     }
   }
 
+  /**
+   * Rút tiền: chỉ được rút tối đa (balance - locked_balance).
+   * Khi rút tiền, cả balance và locked_balance đều được giảm theo số tiền rút.
+   * Trả về mảng [balance, lockedBalance, availableBalance] sau khi rút,
+   * hoặc null nếu không đủ tiền / user không tồn tại.
+   * Trả về mảng với balance = -1 nếu số dư không đủ.
+   */
+  public double[] withdrawBalance(String username, double amount) {
+    String sqlCheck = "select balance, locked_balance from user where username = ? FOR UPDATE";
+    String sqlUpdateBalance = "update user set balance = balance - ? where username = ?";
+    String sqlUpdateLocked = "update user set locked_balance = GREATEST(0, locked_balance - ?) where username = ?";
+    String sqlSelect = "select balance, locked_balance from user where username = ?";
+    DBProperty dbProperty = DBProperty.getInstance();
+
+    try (Connection conn =
+        DriverManager.getConnection(
+            dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
+      conn.setAutoCommit(false);
+      try {
+        double balance;
+        double lockedBalance;
+        try (PreparedStatement check = conn.prepareStatement(sqlCheck)) {
+          check.setString(1, username);
+          try (ResultSet rs = check.executeQuery()) {
+            if (!rs.next()) { conn.rollback(); return null; }
+            balance = rs.getDouble("balance");
+            lockedBalance = rs.getDouble("locked_balance");
+          }
+        }
+        double available = balance - lockedBalance;
+        if (amount > available) {
+          conn.rollback();
+          return new double[] {-1, lockedBalance, available}; // -1 = không đủ tiền
+        }
+
+        try (PreparedStatement update = conn.prepareStatement(sqlUpdateBalance)) {
+          update.setDouble(1, amount);
+          update.setString(2, username);
+          if (update.executeUpdate() != 1) { conn.rollback(); return null; }
+        }
+
+        try (PreparedStatement updateLocked = conn.prepareStatement(sqlUpdateLocked)) {
+          updateLocked.setDouble(1, amount);
+          updateLocked.setString(2, username);
+          updateLocked.executeUpdate();
+        }
+
+        try (PreparedStatement select = conn.prepareStatement(sqlSelect)) {
+          select.setString(1, username);
+          try (ResultSet rs = select.executeQuery()) {
+            if (!rs.next()) { conn.rollback(); return null; }
+            double newBalance = rs.getDouble("balance");
+            double newLocked = rs.getDouble("locked_balance");
+            conn.commit();
+            return new double[] {newBalance, newLocked, newBalance - newLocked};
+          }
+        }
+      } catch (SQLException e) {
+        conn.rollback(); throw e;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public String banUser(String username) {
       String sqlFind = "select role, is_banned from user where username = ?";
       String sqlBan = "update user set is_banned = true where username = ?";
@@ -378,6 +445,37 @@ public class UserDAO {
         throw new RuntimeException(e);
       }
     }
+
+  public String unbanUser(String username) {
+    String sqlFind = "select role, is_banned from user where username = ?";
+    String sqlUnban = "update user set is_banned = false where username = ?";
+
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+        DriverManager.getConnection(
+            dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword())) {
+      conn.setAutoCommit(false);
+      try (PreparedStatement find = conn.prepareStatement(sqlFind)) {
+        find.setString(1, username);
+        try (ResultSet rs = find.executeQuery()) {
+          if (!rs.next()) { conn.rollback(); return "NOT_FOUND"; }
+          String role = rs.getString("role");
+          if ("ADMIN".equalsIgnoreCase(role)) { conn.rollback(); return "FORBIDDEN"; }
+          if (!rs.getBoolean("is_banned")) { conn.rollback(); return "NOT_BANNED"; }
+        }
+      }
+
+      try (PreparedStatement unban = conn.prepareStatement(sqlUnban)) {
+        unban.setString(1, username);
+        if (unban.executeUpdate() != 1) { conn.rollback(); return "NOT_FOUND"; }
+      }
+
+      conn.commit();
+      return "OK";
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   public List<JSONUserInfoTemp> getAllUsers() {
     String sql =

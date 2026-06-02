@@ -8,9 +8,10 @@ import com.group15.daugia.shared.JSON.JSONItemListTemp;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 
 /**
- * GET-ITEMS: lấy toàn bộ item trong hệ thống.
+ * GET-ITEMS: lấy danh sách item SCHEDULED/ACTIVE (loại trừ item của chính người dùng).
+ * Hỗ trợ tìm theo tên qua field nameFilter.
  *
- * <p>Request JSON: { "token": "..." }
+ * <p>Request JSON: { "token": "...", "nameFilter": "abc" (optional) }
  * <p>Response JSON: { "response": "200 OK", "itemList": [...] }
  *   { "response": "401 Unauthorized" } nếu token sai
  *
@@ -37,7 +38,7 @@ public class GetItemsWorker implements Workable {
     }
 
     ans.setResponse("200 OK");
-    ans.setItemList(ItemDAO.getItemDao().getAllItems());
+    ans.setItemList(ItemDAO.getItemDao().getActiveItems(username, req.getNameFilter()));
     return gson.toJson(ans);
   }
 }

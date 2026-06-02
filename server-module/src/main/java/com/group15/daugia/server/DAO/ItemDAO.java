@@ -181,6 +181,73 @@ public class ItemDAO {
     }
   }
 
+  /**
+   * Lấy danh sách item có auction SCHEDULED hoặc ACTIVE, loại trừ item của chính user.
+   * Hỗ trợ lọc theo tên (LIKE, case-insensitive). nameFilter=null hoặc blank = không lọc.
+   */
+  public List<JSONItemTemp> getActiveItems(String username, String nameFilter) {
+    boolean hasFilter = nameFilter != null && !nameFilter.isBlank();
+    String sql =
+        "select i.id, i.seller_username, a.title, i.price, i.`desc`, "
+            + "a.start_time, a.end_time, a.status, a.cur_price "
+            + "from items i join auctions a on a.item_id = i.id "
+            + "where a.status IN ('SCHEDULED','ACTIVE') "
+            + "and i.seller_username <> ? "
+            + (hasFilter ? "and a.title LIKE ? " : "")
+            + "order by a.status DESC, i.id desc";
+
+    List<JSONItemTemp> items = new ArrayList<>();
+    java.time.format.DateTimeFormatter fmt =
+        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+    DBProperty dbProperty = DBProperty.getInstance();
+    try (Connection conn =
+            DriverManager.getConnection(
+                dbProperty.getDBUrl(), dbProperty.getUsername(), dbProperty.getPassword());
+        PreparedStatement statement = conn.prepareStatement(sql)) {
+
+      statement.setString(1, username);
+      if (hasFilter) {
+        statement.setString(2, "%" + nameFilter + "%");
+      }
+
+      try (ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          JSONItemTemp item = new JSONItemTemp();
+          item.setId(resultSet.getInt("id"));
+          item.setSellerUsername(resultSet.getString("seller_username"));
+          item.setName(resultSet.getString("title"));
+          item.setPrice(resultSet.getDouble("price"));
+          item.setDesc(resultSet.getString("desc"));
+          item.setStartTime(resultSet.getString("start_time"));
+          item.setEndTime(resultSet.getString("end_time"));
+          String status = resultSet.getString("status");
+          item.setStatus(status);
+          item.setCurPrice(resultSet.getDouble("cur_price"));
+
+          if ("ACTIVE".equals(status) && item.getEndTime() != null) {
+            try {
+              java.time.LocalDateTime end = java.time.LocalDateTime.parse(item.getEndTime(), fmt);
+              long secs = java.time.Duration.between(now, end).getSeconds();
+              item.setSecondsRemaining(Math.max(0, secs));
+            } catch (Exception ignored) {}
+          } else if ("SCHEDULED".equals(status) && item.getStartTime() != null) {
+            try {
+              java.time.LocalDateTime start = java.time.LocalDateTime.parse(item.getStartTime(), fmt);
+              long secs = java.time.Duration.between(now, start).getSeconds();
+              item.setSecondsToStart(Math.max(0, secs));
+            } catch (Exception ignored) {}
+          }
+          items.add(item);
+        }
+      }
+      return items;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<JSONItemTemp> getItemsBySeller(String sellerUsername) {
     String sql =
         "select i.id, i.seller_username, i.name, i.price, i.`desc`, a.start_time, a.end_time "

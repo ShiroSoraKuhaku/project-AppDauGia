@@ -149,6 +149,21 @@ public class AdminController implements Initializable {
   }
 
   @FXML
+  private void handleUnbanUser() {
+    UserRow row = tblUsers.getSelectionModel().getSelectedItem();
+    if (row == null) return;
+    JSONUserTemp req = new JSONUserTemp();
+    req.setToken(SessionManager.getToken());
+    req.setUsername(row.username.get());
+    JSONUserTemp ans = gson.fromJson(ShortConnectNetwork.shortReq("UNBAN-USER", gson.toJson(req)), JSONUserTemp.class);
+    if (ans != null && "200 OK".equals(ans.getResponse())) {
+      refreshUsers();
+      return;
+    }
+    showError("UNBAN-USER thất bại");
+  }
+
+  @FXML
   private void handleOpenAuction() {
     callAuctionAdminCommand("OPEN-AUCTION");
   }

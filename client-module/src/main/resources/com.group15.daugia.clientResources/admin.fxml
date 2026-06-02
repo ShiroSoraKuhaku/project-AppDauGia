@@ -31,6 +31,7 @@
                     </padding>
                     <HBox spacing="8">
                         <Button text="Cấm người dùng" onAction="#handleBanUser" styleClass="admin-action-button-danger"/>
+                        <Button text="Bỏ cấm" onAction="#handleUnbanUser" styleClass="admin-action-button"/>
                         <Button text="Làm mới" onAction="#refreshUsers" styleClass="admin-action-button"/>
                         <Pane HBox.hgrow="ALWAYS"/>
                     </HBox>
