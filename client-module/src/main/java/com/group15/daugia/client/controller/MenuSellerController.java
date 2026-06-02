@@ -6,11 +6,14 @@ import com.group15.daugia.client.network.ShortConnectNetwork;
 import com.group15.daugia.shared.JSON.JSONItemListTemp;
 import com.group15.daugia.shared.JSON.JSONItemTemp;
 import com.group15.daugia.shared.model.BaseItem;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
@@ -19,7 +22,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -36,8 +41,12 @@ public class MenuSellerController implements Initializable {
     @FXML private TextField txtName;
     @FXML private TextField txtDesc;
     @FXML private TextField txtPrice;
-    @FXML private TextField txtStartTime;
-    @FXML private TextField txtEndTime;
+    @FXML private DatePicker dpStartDate;
+    @FXML private ComboBox<String> cbStartHour;
+    @FXML private ComboBox<String> cbStartMinute;
+    @FXML private DatePicker dpEndDate;
+    @FXML private ComboBox<String> cbEndHour;
+    @FXML private ComboBox<String> cbEndMinute;
     @FXML private TextField txtQuickStartAfter;
     @FXML private TextField txtQuickDuration;
 
@@ -49,6 +58,7 @@ public class MenuSellerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupTimeControls();
         loadMyProducts();
     }
 
@@ -64,8 +74,8 @@ public class MenuSellerController implements Initializable {
             return;
         }
 
-        txtStartTime.setText(TIME_FORMATTER.format(times.startTime));
-        txtEndTime.setText(TIME_FORMATTER.format(times.endTime));
+        setTimeControls(times.startTime, true);
+        setTimeControls(times.endTime, false);
     }
 
     @FXML
@@ -247,8 +257,8 @@ public class MenuSellerController implements Initializable {
         txtName.setText(safeText(item.getName()));
         txtDesc.setText(safeText(item.getDescription()));
         txtPrice.setText(String.valueOf(item.getPrice()));
-        txtStartTime.setText(safeText(item.getStartTime()));
-        txtEndTime.setText(safeText(item.getEndTime()));
+        setTimeControlsFromText(item.getStartTime(), true);
+        setTimeControlsFromText(item.getEndTime(), false);
         highlightSelectedCard();
     }
 
@@ -271,46 +281,25 @@ public class MenuSellerController implements Initializable {
         txtName.clear();
         txtDesc.clear();
         txtPrice.clear();
-        txtStartTime.clear();
-        txtEndTime.clear();
+        clearTimeControls(true);
+        clearTimeControls(false);
         highlightSelectedCard();
     }
 
     private AuctionTimes resolveAuctionTimes() {
-        String startRaw = txtStartTime.getText() == null ? "" : txtStartTime.getText().trim();
-        String endRaw = txtEndTime.getText() == null ? "" : txtEndTime.getText().trim();
-
-        if (startRaw.isEmpty() && endRaw.isEmpty()) {
+        if (dpStartDate.getValue() == null && dpEndDate.getValue() == null) {
             AuctionTimes quickTimes = parseQuickTimes();
             if (quickTimes != null) {
                 return quickTimes;
             }
-            showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Vui lòng nhập thời gian bắt đầu/kết thúc hoặc dùng phần mở nhanh.");
+            showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Vui lòng chọn thời gian bắt đầu/kết thúc hoặc dùng phần mở nhanh.");
             return null;
         }
 
-        LocalDateTime startTime = null;
-        LocalDateTime endTime = null;
-
-        if (!startRaw.isEmpty()) {
-            startTime = parseTime(startRaw, "Thời gian bắt đầu");
-            if (startTime == null) {
-                return null;
-            }
-        }
-
-        if (!endRaw.isEmpty()) {
-            endTime = parseTime(endRaw, "Thời gian kết thúc");
-            if (endTime == null) {
-                return null;
-            }
-        }
-
-        if (startTime == null) {
-            startTime = LocalDateTime.now();
-        }
-        if (endTime == null) {
-            endTime = startTime.plusHours(1);
+        LocalDateTime startTime = getSelectedTime(true, "Thời gian bắt đầu");
+        LocalDateTime endTime = getSelectedTime(false, "Thời gian kết thúc");
+        if (startTime == null || endTime == null) {
+            return null;
         }
 
         if (!endTime.isAfter(startTime)) {
@@ -319,6 +308,82 @@ public class MenuSellerController implements Initializable {
         }
 
         return new AuctionTimes(startTime, endTime);
+    }
+
+    private void setupTimeControls() {
+        List<String> hours = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            hours.add(String.format("%02d", i));
+        }
+
+        List<String> minutes = new ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            minutes.add(String.format("%02d", i));
+        }
+
+        cbStartHour.setItems(FXCollections.observableArrayList(hours));
+        cbEndHour.setItems(FXCollections.observableArrayList(hours));
+        cbStartMinute.setItems(FXCollections.observableArrayList(minutes));
+        cbEndMinute.setItems(FXCollections.observableArrayList(minutes));
+
+        cbStartHour.setValue("00");
+        cbStartMinute.setValue("00");
+        cbEndHour.setValue("01");
+        cbEndMinute.setValue("00");
+    }
+
+    private LocalDateTime getSelectedTime(boolean start, String fieldName) {
+        DatePicker datePicker = start ? dpStartDate : dpEndDate;
+        ComboBox<String> hourBox = start ? cbStartHour : cbEndHour;
+        ComboBox<String> minuteBox = start ? cbStartMinute : cbEndMinute;
+        LocalDate date = datePicker.getValue();
+
+        if (date == null) {
+            showAlert(Alert.AlertType.ERROR, "Dữ liệu không hợp lệ", "Vui lòng chọn ngày cho " + fieldName.toLowerCase(Locale.ROOT) + ".");
+            return null;
+        }
+
+        int hour = parseTimePart(hourBox.getValue(), 0);
+        int minute = parseTimePart(minuteBox.getValue(), 0);
+        return LocalDateTime.of(date, LocalTime.of(hour, minute));
+    }
+
+    private int parseTimePart(String value, int fallback) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private void setTimeControlsFromText(String value, boolean start) {
+        if (value == null || value.isBlank()) {
+            clearTimeControls(start);
+            return;
+        }
+
+        LocalDateTime parsed = parseTime(value, start ? "Thời gian bắt đầu" : "Thời gian kết thúc");
+        if (parsed != null) {
+            setTimeControls(parsed, start);
+        }
+    }
+
+    private void setTimeControls(LocalDateTime value, boolean start) {
+        DatePicker datePicker = start ? dpStartDate : dpEndDate;
+        ComboBox<String> hourBox = start ? cbStartHour : cbEndHour;
+        ComboBox<String> minuteBox = start ? cbStartMinute : cbEndMinute;
+        datePicker.setValue(value.toLocalDate());
+        hourBox.setValue(String.format("%02d", value.getHour()));
+        minuteBox.setValue(String.format("%02d", value.getMinute()));
+    }
+
+    private void clearTimeControls(boolean start) {
+        DatePicker datePicker = start ? dpStartDate : dpEndDate;
+        ComboBox<String> hourBox = start ? cbStartHour : cbEndHour;
+        ComboBox<String> minuteBox = start ? cbStartMinute : cbEndMinute;
+        datePicker.setValue(null);
+        hourBox.setValue(start ? "00" : "01");
+        minuteBox.setValue("00");
     }
 
     private AuctionTimes parseQuickTimes() {
