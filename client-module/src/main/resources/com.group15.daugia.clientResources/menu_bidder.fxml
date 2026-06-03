@@ -22,7 +22,14 @@
         </VBox>
         <Pane HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblBalance" text="Số dư: --" styleClass="wallet-label"/>
+        <TextField fx:id="txtSearch" promptText="Tìm theo tên..." prefWidth="180"
+                   onAction="#handleSearch"/>
+        <Button text="🔍" onAction="#handleSearch" styleClass="menu-button-secondary"/>
         <Button fx:id="btnTopup" text="Nạp tiền" onAction="#handleTopup"
+                styleClass="menu-button-secondary"/>
+        <Button fx:id="btnWithdraw" text="Rút tiền" onAction="#handleWithdraw"
+                styleClass="menu-button-secondary"/>
+        <Button fx:id="btnMyHistory" text="Lịch sử đấu giá" onAction="#handleMyHistory"
                 styleClass="menu-button-secondary"/>
         <Button fx:id="btnRefresh" text="↻  Làm mới" onAction="#handleRefresh"
                 styleClass="menu-button-secondary"/>

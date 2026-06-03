@@ -17,6 +17,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -38,6 +39,7 @@ public class MenuBidderController implements Initializable {
     @FXML private FlowPane cardPane;
     @FXML private Label lblSubtitle;
     @FXML private Label lblBalance;
+    @FXML private TextField txtSearch;
 
     private final Gson gson = new Gson();
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
@@ -66,6 +68,11 @@ public class MenuBidderController implements Initializable {
         loadItems(true);
     }
 
+    @FXML
+    private void handleSearch() {
+        loadItems(true);
+    }
+
     // -----------------------------------------------------------------------
     // Load dữ liệu từ server
     // -----------------------------------------------------------------------
@@ -75,7 +82,8 @@ public class MenuBidderController implements Initializable {
         }
 
         refreshBalanceLabel();
-        List<BaseItem> items = fetchItems();
+        String nameFilter = txtSearch != null ? txtSearch.getText().trim() : "";
+        List<BaseItem> items = fetchItems(nameFilter);
         if (items.isEmpty()) {
             cardPane.getChildren().clear();
             lblSubtitle.setText("Không có sản phẩm nào.");
@@ -134,11 +142,16 @@ public class MenuBidderController implements Initializable {
                 "Nạp tiền thành công. Số dư hiện tại: " + VND.format((long) answer.getBalance()) + " ₫");
     }
 
-    private List<BaseItem> fetchItems() {
+    private List<BaseItem> fetchItems(String nameFilter) {
         List<BaseItem> result = new ArrayList<>();
         try {
             String token = SessionManager.getToken() != null ? SessionManager.getToken() : "";
-            String data = ShortConnectNetwork.shortReq("GET-ITEMS", "{\"token\":\"" + token + "\"}");
+            JSONItemTemp req = new JSONItemTemp();
+            req.setToken(token);
+            if (nameFilter != null && !nameFilter.isBlank()) {
+                req.setNameFilter(nameFilter);
+            }
+            String data = ShortConnectNetwork.shortReq("GET-ITEMS", gson.toJson(req));
             JSONItemListTemp answer = gson.fromJson(data, JSONItemListTemp.class);
 
             if (answer == null || answer.getItemList() == null) {
@@ -167,6 +180,65 @@ public class MenuBidderController implements Initializable {
             System.err.println("[MenuBidderController] Lỗi khi tải sản phẩm: " + e.getMessage());
         }
         return result;
+    }
+
+    @FXML
+    private void handleWithdraw() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Rút tiền");
+        dialog.setHeaderText("Rút tiền từ tài khoản");
+        dialog.setContentText("Số tiền:");
+
+        Optional<String> input = dialog.showAndWait();
+        if (input.isEmpty()) {
+            return;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(input.get().trim());
+        } catch (NumberFormatException ex) {
+            showAlert(Alert.AlertType.ERROR, "Số tiền không hợp lệ.");
+            return;
+        }
+
+        if (!Double.isFinite(amount) || amount <= 0) {
+            showAlert(Alert.AlertType.ERROR, "Số tiền phải lớn hơn 0.");
+            return;
+        }
+
+        JSONMoneyTemp request = new JSONMoneyTemp();
+        request.setToken(SessionManager.getToken());
+        request.setAmount(amount);
+
+        String data = ShortConnectNetwork.shortReq("WITHDRAW-BALANCE", gson.toJson(request));
+        JSONMoneyTemp answer = gson.fromJson(data, JSONMoneyTemp.class);
+        if (answer == null || answer.getResponse() == null) {
+            showAlert(Alert.AlertType.ERROR, "Rút tiền thất bại.");
+            return;
+        }
+        if ("400 Bad Request".equals(answer.getResponse())) {
+            showAlert(Alert.AlertType.ERROR,
+                    "Số dư khả dụng không đủ. Số dư khả dụng: "
+                    + VND.format((long) answer.getAvailableBalance()) + " ₫");
+            return;
+        }
+        if (!"200 OK".equals(answer.getResponse())) {
+            showAlert(Alert.AlertType.ERROR, "Rút tiền thất bại: " + answer.getResponse());
+            return;
+        }
+
+        refreshBalanceLabel();
+        showAlert(Alert.AlertType.INFORMATION,
+                "Rút tiền thành công. Số dư còn lại: "
+                + VND.format((long) answer.getBalance()) + " ₫");
+    }
+
+    @FXML
+    private void handleMyHistory() {
+        com.group15.daugia.client.controller.MyAuctionHistoryController controller =
+            com.group15.daugia.client.util.SceneChanger.changeTo(
+                "com.group15.daugia.clientResources/my_auction_history.fxml");
     }
 
     private void refreshBalanceLabel() {

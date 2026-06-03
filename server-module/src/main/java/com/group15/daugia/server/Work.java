@@ -14,6 +14,7 @@ public class Work {
     works.put("RM-TOKEN", new LogoutWorker());
     works.put("SIGNUP", new SignupWorker());
     works.put("BAN-USER", new BanUserWorker());
+    works.put("UNBAN-USER", new UnbanUserWorker());
     works.put("GET-USERS", new GetUsersWorker());
 
     // Item-related worker
@@ -23,6 +24,7 @@ public class Work {
     works.put("GET-ITEMS", new GetItemsWorker());
     works.put("GET-ITEM", new GetItemsWorker());
     works.put("GET-MY-ITEMS", new GetMyItemsWorker());
+    works.put("GET-MY-AUCTION-HISTORY", new GetMyAuctionHistoryWorker());
     // Auction workers
     works.put("WATCH-AUCTION", new WatchAuctionWorker());
     works.put("UNWATCH-AUCTION", new UnwatchAuctionWorker());
@@ -35,8 +37,9 @@ public class Work {
     works.put("CLOSE-AUCTION", new CloseAuctionWorker());
     works.put("CANCEL-BID", new CancelBidWorker());
 
-    // Topup worker
+    // Topup / Withdraw worker
     works.put("TOPUP-BALANCE", new TopupBalanceWorker());
+    works.put("WITHDRAW-BALANCE", new WithdrawBalanceWorker());
     works.put("GET-BALANCE", new GetBalanceWorker());
   }
 

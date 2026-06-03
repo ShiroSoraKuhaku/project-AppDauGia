@@ -9,9 +9,10 @@ import com.group15.daugia.shared.JSON.JSONUserTemp;
  * LOGIN: xác thực user và tạo token đăng nhập mới.
  *
  * <p>Request JSON: { "username": "...", "password": "..." }
- * <p>Response JSON: { "response": "201 Created", "username": "...", "token": "...", "role": "..." }
- *   { "response": "401 Unauthorized" } nếu sai tài khoản / mật khẩu
- *   { "response": "409 Conflict" } nếu user đã có phiên đăng nhập
+ *
+ * <p>Response JSON: { "response": "200 OK", "username": "...", "token": "...", "role": "..." } {
+ * "response": "401 Unauthorized" } nếu sai tài khoản / mật khẩu { "response": "409 Conflict" } nếu
+ * user đã có phiên đăng nhập { "response": "403 Forbidden" } nếu user bị ban
  */
 public class LoginWorker implements Workable {
 

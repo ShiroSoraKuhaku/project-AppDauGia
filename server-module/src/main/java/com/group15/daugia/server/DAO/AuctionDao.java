@@ -159,7 +159,13 @@ public class AuctionDao {
   // -----------------------------------------------------------------------
   // 5. placeBidTransactional – kèm check available balance + hold logic
   // -----------------------------------------------------------------------
-  public boolean placeBidTransactional(
+  /**
+   * Đặt bid. Trả về AutoBidResult:
+   * - null nếu thất bại
+   * - AutoBidResult với username=null nếu thành công nhưng không có auto-bid sau đó
+   * - AutoBidResult với username != null nếu có auto-bid xảy ra
+   */
+  public AutoBidResult placeBidTransactional(
       int auctionId,
       String bidderUsername,
       double bidAmount,
@@ -168,7 +174,8 @@ public class AuctionDao {
     if (usePessimistic) {
       return placeBidPessimistic(auctionId, bidderUsername, bidAmount);
     }
-    return placeBidOptimisticWithRetry(auctionId, bidderUsername, bidAmount, expectedVersion);
+    boolean ok = placeBidOptimisticWithRetry(auctionId, bidderUsername, bidAmount, expectedVersion);
+    return ok ? new AutoBidResult(null, 0) : null;
   }
 
   private boolean placeBidOptimisticWithRetry(
@@ -249,7 +256,7 @@ public class AuctionDao {
     }
   }
 
-  private boolean placeBidPessimistic(int auctionId, String bidderUsername, double bidAmount) {
+  private AutoBidResult placeBidPessimistic(int auctionId, String bidderUsername, double bidAmount) {
     String sqlCheck =
         "SELECT status, end_time, cur_price, cur_leader FROM auctions WHERE id = ? FOR UPDATE";
     String sqlUpdate =
@@ -264,7 +271,7 @@ public class AuctionDao {
         try (PreparedStatement psCheck = conn.prepareStatement(sqlCheck)) {
           psCheck.setInt(1, auctionId);
           try (ResultSet rs = psCheck.executeQuery()) {
-            if (!rs.next()) { conn.rollback(); return false; }
+            if (!rs.next()) { conn.rollback(); return null; }
             String status = rs.getString("status");
             String endTime = rs.getString("end_time");
             double curPrice = rs.getDouble("cur_price");
@@ -273,20 +280,20 @@ public class AuctionDao {
             LocalDateTime end = LocalDateTime.parse(endTime, FMT);
             if (!"ACTIVE".equals(status) || LocalDateTime.now().isAfter(end)
                 || bidAmount <= curPrice) {
-              conn.rollback(); return false;
+              conn.rollback(); return null;
             }
           }
         }
 
         // Check available balance
         if (!hasEnoughAvailableBalance(conn, bidderUsername, auctionId, bidAmount)) {
-          conn.rollback(); return false;
+          conn.rollback(); return null;
         }
 
         try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
           psUpdate.setDouble(1, bidAmount); psUpdate.setString(2, bidderUsername);
           psUpdate.setInt(3, auctionId);
-          if (psUpdate.executeUpdate() != 1) { conn.rollback(); return false; }
+          if (psUpdate.executeUpdate() != 1) { conn.rollback(); return null; }
         }
 
         try (PreparedStatement psBid = conn.prepareStatement(sqlBid)) {
@@ -299,10 +306,11 @@ public class AuctionDao {
           releaseHold(conn, auctionId, prevLeader);
         }
 
-        processAutoBids(conn, auctionId);
+        AutoBidResult autoBid = processAutoBids(conn, auctionId);
 
         conn.commit();
-        return true;
+        // Trả về null-sentinel nếu thành công nhưng không có auto-bid: dùng MANUAL_BID_OK sentinel
+        return autoBid != null ? autoBid : new AutoBidResult(null, 0); // null username = không có auto-bid
       } catch (SQLException ex) {
         conn.rollback(); throw ex;
       } finally {
@@ -365,15 +373,18 @@ public class AuctionDao {
 
   // -----------------------------------------------------------------------
   // 8. settleAuction – gọi từ AuctionClock.onAuctionEnd
-  //    Trừ tiền winner, release tất cả hold của auction này
+  //    Trừ tiền winner, cộng tiền người bán, release tất cả hold của auction này
   // -----------------------------------------------------------------------
   public void settleAuction(int auctionId) {
     String sqlSnap =
-        "SELECT cur_leader, cur_price FROM auctions WHERE id = ?";
+        "SELECT a.cur_leader, a.cur_price, i.seller_username "
+            + "FROM auctions a JOIN items i ON i.id = a.item_id WHERE a.id = ?";
+    String sqlMarkEnded =
+        "UPDATE auctions SET status = 'ENDED', version = version + 1 WHERE id = ? AND status = 'ACTIVE'";
     String sqlDeduct =
-        "UPDATE user SET balance = balance - ? WHERE username = ? AND balance >= ?";
-    String sqlReleaseAll =
-        "DELETE FROM auction_bid_holds WHERE auction_id = ?";
+        "UPDATE user SET balance = balance - ? WHERE username = ?";
+    String sqlCredit =
+        "UPDATE user SET balance = balance + ? WHERE username = ?";
     String sqlDecLock =
         "UPDATE user SET locked_balance = GREATEST(0, locked_balance - ?) WHERE username = ?";
 
@@ -381,6 +392,7 @@ public class AuctionDao {
       conn.setAutoCommit(false);
       try {
         String winner = null;
+        String seller = null;
         double finalPrice = 0;
 
         try (PreparedStatement ps = conn.prepareStatement(sqlSnap)) {
@@ -389,6 +401,7 @@ public class AuctionDao {
             if (rs.next()) {
               winner = rs.getString("cur_leader");
               finalPrice = rs.getDouble("cur_price");
+              seller = rs.getString("seller_username");
             }
           }
         }
@@ -396,13 +409,14 @@ public class AuctionDao {
         if (winner != null) {
           // Lấy hold hiện tại của winner để giải phóng khỏi locked_balance
           double holdAmount = getHoldAmount(conn, auctionId, winner);
-          // Trừ balance thực
+          
+          // Trừ balance thực của winner
           try (PreparedStatement ps = conn.prepareStatement(sqlDeduct)) {
             ps.setDouble(1, finalPrice);
             ps.setString(2, winner);
-            ps.setDouble(3, finalPrice);
-            ps.executeUpdate(); // best-effort
+            ps.executeUpdate();
           }
+          
           // Giảm locked_balance đúng bằng hold
           if (holdAmount > 0) {
             try (PreparedStatement ps = conn.prepareStatement(sqlDecLock)) {
@@ -411,6 +425,21 @@ public class AuctionDao {
               ps.executeUpdate();
             }
           }
+          
+          // Cộng tiền cho người bán
+          if (seller != null && !seller.equals(winner)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlCredit)) {
+              ps.setDouble(1, finalPrice);
+              ps.setString(2, seller);
+              ps.executeUpdate();
+            }
+          }
+        }
+
+        // Mark auction as ENDED
+        try (PreparedStatement ps = conn.prepareStatement(sqlMarkEnded)) {
+          ps.setInt(1, auctionId);
+          ps.executeUpdate();
         }
 
         // Release tất cả hold còn lại (bao gồm những bidder không thắng)
@@ -833,6 +862,45 @@ public class AuctionDao {
     } catch (SQLException e) { throw new RuntimeException(e); }
   }
 
+  // -----------------------------------------------------------------------
+  // getMyAuctionHistory – lấy danh sách auction user đã/đang tham gia
+  // -----------------------------------------------------------------------
+  public List<com.group15.daugia.shared.JSON.JSONMyAuctionHistoryTemp.AuctionHistoryRecord>
+      getMyAuctionHistory(String username) {
+    String sql =
+        "SELECT a.id, a.title, a.status, a.cur_price, a.cur_leader, "
+            + "a.start_time, a.end_time, MAX(ab.bid_amount) AS my_top_bid "
+            + "FROM auction_bids ab "
+            + "JOIN auctions a ON a.id = ab.auction_id "
+            + "WHERE ab.bidder_username = ? "
+            + "GROUP BY a.id, a.title, a.status, a.cur_price, a.cur_leader, a.start_time, a.end_time "
+            + "ORDER BY a.id DESC";
+
+    List<com.group15.daugia.shared.JSON.JSONMyAuctionHistoryTemp.AuctionHistoryRecord> list =
+        new java.util.ArrayList<>();
+    try (Connection conn = getConn(); PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, username);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          com.group15.daugia.shared.JSON.JSONMyAuctionHistoryTemp.AuctionHistoryRecord rec =
+              new com.group15.daugia.shared.JSON.JSONMyAuctionHistoryTemp.AuctionHistoryRecord();
+          rec.setAuctionId(rs.getInt("id"));
+          rec.setTitle(rs.getString("title"));
+          rec.setStatus(rs.getString("status"));
+          rec.setCurPrice(rs.getDouble("cur_price"));
+          rec.setCurLeader(rs.getString("cur_leader"));
+          rec.setMyTopBid(rs.getDouble("my_top_bid"));
+          rec.setStartTime(rs.getString("start_time"));
+          rec.setEndTime(rs.getString("end_time"));
+          list.add(rec);
+        }
+      }
+      return list;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private CurrentAuction getCurrentAuction(Connection conn, int auctionId) throws SQLException {
     String sql = "SELECT cur_price, cur_leader FROM auctions WHERE id = ? FOR UPDATE";
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -884,27 +952,40 @@ public class AuctionDao {
     }
   }
 
-  private void processAutoBids(Connection conn, int auctionId) throws SQLException {
+  /**
+   * Chạy auto-bid logic. Trả về AutoBidResult nếu có bid xảy ra, null nếu không.
+   */
+  public static class AutoBidResult {
+    public final String bidderUsername;
+    public final double bidAmount;
+    AutoBidResult(String u, double a) { bidderUsername = u; bidAmount = a; }
+  }
+
+  /**
+   * Gọi từ bên ngoài (worker) sau khi transaction commit để biết auto-bid có xảy ra không.
+   * Trả về null nếu không có auto-bid.
+   */
+  private AutoBidResult processAutoBids(Connection conn, int auctionId) throws SQLException {
     CurrentAuction current = getCurrentAuction(conn, auctionId);
     List<AutoBidCandidate> candidates =
         findTopAutoBidCandidates(conn, auctionId, current.curPrice);
 
-    if (candidates.isEmpty()) return;
+    if (candidates.isEmpty()) return null;
 
     AutoBidCandidate winner = candidates.get(0);
-    if (winner.username.equals(current.curLeader) && candidates.size() == 1) return;
+    if (winner.username.equals(current.curLeader) && candidates.size() == 1) return null;
 
     double winnerStep = winner.bidStep > 0 ? winner.bidStep : DEFAULT_BID_STEP;
-    if (winnerStep > (winner.maxAmount - current.curPrice)) return;
+    if (winnerStep > (winner.maxAmount - current.curPrice)) return null;
     double minNextBid = current.curPrice + winnerStep;
     double secondLimit = candidates.size() > 1 ? candidates.get(1).maxAmount : current.curPrice;
     double targetAmount = Math.max(minNextBid, secondLimit + winnerStep);
     double bidAmount = Math.min(winner.maxAmount, targetAmount);
 
-    if (bidAmount <= current.curPrice) return;
+    if (bidAmount <= current.curPrice) return null;
 
     // Check available balance trước khi auto-bid
-    if (!hasEnoughAvailableBalance(conn, winner.username, auctionId, bidAmount)) return;
+    if (!hasEnoughAvailableBalance(conn, winner.username, auctionId, bidAmount)) return null;
 
     updateAuctionBid(conn, auctionId, winner.username, bidAmount);
     insertAuctionBid(conn, auctionId, winner.username, bidAmount);
@@ -912,5 +993,6 @@ public class AuctionDao {
     if (current.curLeader != null && !current.curLeader.equals(winner.username)) {
       releaseHold(conn, auctionId, current.curLeader);
     }
+    return new AutoBidResult(winner.username, bidAmount);
   }
 }

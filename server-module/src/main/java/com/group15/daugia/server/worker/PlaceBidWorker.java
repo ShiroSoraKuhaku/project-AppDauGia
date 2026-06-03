@@ -7,6 +7,7 @@ import com.group15.daugia.server.DAO.UserDAO;
 import com.group15.daugia.server.Workable;
 import com.group15.daugia.server.service.AuctionEventHelper;
 import com.group15.daugia.server.service.AuctionWatcherService;
+import com.group15.daugia.shared.JSON.JSONAuctionEventTemp;
 import com.group15.daugia.shared.JSON.JSONAuctionTemp;
 import com.group15.daugia.shared.JSON.JSONBidTemp;
 
@@ -65,22 +66,45 @@ public class PlaceBidWorker implements Workable {
 
     boolean usePessimistic =
         snap.getSecondsRemaining() <= 30 || dao.hasActiveAutoBids(req.getAuctionId());
-    boolean success = dao.placeBidTransactional(
+    AuctionDao.AutoBidResult result = dao.placeBidTransactional(
         req.getAuctionId(), username, req.getBidAmount(), snap.getVersion(), usePessimistic);
 
-    if (!success) {
+    if (result == null) {
       ans.setResponse("409 Conflict");
       return gson.toJson(ans);
     }
 
-    JSONAuctionTemp newSnap = dao.getAuctionSnapshot(req.getAuctionId());
-    watcherSvc.broadcast(req.getAuctionId(), AuctionEventHelper.buildBidPlacedEvent(newSnap));
+    // Broadcast event cho manual bid
+    JSONAuctionEventTemp manualEvent = new JSONAuctionEventTemp();
+    manualEvent.setEventType("BID_PLACED");
+    manualEvent.setAuctionId(req.getAuctionId());
+    manualEvent.setStatus("ACTIVE");
+    manualEvent.setCurPrice(req.getBidAmount());
+    manualEvent.setCurLeader(username);
+    manualEvent.setBidderUsername(username);
+    manualEvent.setBidAmount(req.getBidAmount());
+    watcherSvc.broadcast(req.getAuctionId(), manualEvent);
+
+    // Nếu có auto-bid xảy ra, broadcast thêm event cho auto-bid
+    if (result.bidderUsername != null) {
+      JSONAuctionTemp newSnap = dao.getAuctionSnapshot(req.getAuctionId());
+      if (newSnap != null) {
+        watcherSvc.broadcast(req.getAuctionId(), AuctionEventHelper.buildBidPlacedEvent(newSnap));
+        clock.tryExtend(req.getAuctionId());
+        ans.setResponse("201 Created");
+        ans.setAuctionId(req.getAuctionId());
+        ans.setBidderUsername(username);
+        ans.setBidAmount(req.getBidAmount());
+        return gson.toJson(ans);
+      }
+    }
+
     clock.tryExtend(req.getAuctionId());
 
     ans.setResponse("201 Created");
     ans.setAuctionId(req.getAuctionId());
-    ans.setBidderUsername(newSnap.getCurLeader());
-    ans.setBidAmount(newSnap.getCurPrice());
+    ans.setBidderUsername(username);
+    ans.setBidAmount(req.getBidAmount());
     return gson.toJson(ans);
   }
 }
