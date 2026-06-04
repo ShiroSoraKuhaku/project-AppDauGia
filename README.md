@@ -15,7 +15,7 @@ Phạm vi hệ thống bao gồm: Quản lý tài khoản người dùng, Quản
 ### Yêu cầu cài đặt (Setup Prerequisites)
 1. **Java JDK 25** (hoặc mới hơn, đã được thêm vào biến môi trường `JAVA_HOME`).
 2. **Apache Maven** (đã được thêm vào biến môi trường `PATH`).
-3. **Docker Desktop** (bắt buộc phải cài đặt, mở và đang chạy ngầm để khởi tạo MySQL database và chạy Server nếu dùng Docker).
+3. **Docker / Docker Compose** (Windows/macOS có thể dùng Docker Desktop; trên Linux nên cài Docker Engine + Docker Compose plugin để khởi tạo MySQL database và chạy Server nếu dùng Docker).
 
 ## 3. Cấu trúc thư mục hoặc các module chính
 Cấu trúc cơ bản của dự án được tổ chức theo mô hình Multi-Module kết hợp Client-Server:
@@ -25,6 +25,14 @@ DauGiaProject/
 ├── Dockerfile                  # Cấu hình build Docker cho Server
 ├── init.sql                    # Script khởi tạo bảng tự động cho MySQL
 ├── pom.xml                     # Cấu hình Maven gốc (Parent POM)
+├── window/                     # Script chạy/dừng cho Windows
+│   ├── run.bat
+│   ├── client.bat
+│   └── stop.bat
+├── mac-linux/                  # Script chạy/dừng cho macOS/Linux
+│   ├── run.sh
+│   ├── client.sh
+│   ├── stop.sh
 ├── client-module/              # 🎨 FRONTEND: Giao diện người dùng JavaFX
 │   ├── pom.xml
 │   └── src/main/java/com/group15/daugia/client/
@@ -53,31 +61,89 @@ Sau khi biên dịch và đóng gói thành công bằng lệnh Maven tại thư
 
 ## 5. Hướng dẫn chạy hệ thống (How to run)
 
-**🚨 YÊU CẦU BẮT BUỘC CHUNG:** Bạn **phải mở ứng dụng Docker Desktop** trên máy tính trước. Chờ cho trạng thái Docker chuyển sang **Engine running** rồi mới tiến hành chạy Database.
+**🚨 YÊU CẦU BẮT BUỘC CHUNG:** Bạn **phải đảm bảo Docker Engine/Docker Desktop đang chạy** trước. Chờ cho trạng thái Docker chuyển sang **Engine running** rồi mới tiến hành chạy Database hoặc Server.
 
-### Cách 1: Chạy tự động bằng Docker Compose (Khuyến nghị)
-Sử dụng cách này, cả Server và Database đều được khởi chạy tự động trong các Container. Bạn chỉ cần chạy Client bên ngoài.
+### Cách 1: Chạy tự động theo hệ điều hành
+Cách này sẽ tự động:
+1. Khởi động MySQL + Server bằng Docker Compose.
+2. Chờ Server sẵn sàng trên `localhost:8080`.
+3. Sẵn sàng để mở một hoặc nhiều Client riêng biệt.
 
-**Bước 1: Khởi động Server & Database**
-1. Mở Terminal và di chuyển vào thư mục gốc `DauGiaProject`.
-2. Chạy lệnh:
-   ```bash
-   docker-compose up -d
-   ```
-   *(Hệ thống sẽ tự động build image cho Server và chạy MySQL. Database chạy ở cổng 3307 trên Host, Server chạy ở cổng 8080).*
+**Lưu ý**: Phải chạy backend lên trước thì mới có thể chạy client.
 
-**Bước 2: Khởi động Client (Giao diện người dùng)**
-1. Mở một **Terminal mới**, di chuyển vào thư mục `client-module`:
-   ```bash
-   cd client-module
-   ```
-2. Chạy lệnh sau để khởi chạy Client:
-   ```bash
-   mvn compile exec:java
-   ```
-   *(Có thể mở nhiều Terminal và chạy lệnh trên để mở nhiều cửa sổ Client cùng lúc).*
+#### Windows
+Chạy backend:
+```bat
+window\run.bat
+```
+Hoặc double click trực tiếp `window\run.bat`.
 
-3. Khi muốn dừng hệ thống, mở Terminal tại thư mục gốc và chạy: `docker-compose down`.
+Mở thêm một Client:
+```bat
+window\client.bat
+```
+Hoặc double click trực tiếp `window\client.bat`.
+
+Khi muốn dừng toàn bộ hệ thống:
+```bat
+window\stop.bat
+```
+Hoặc double click trực tiếp `window\stop.bat`.
+
+#### macOS/Linux
+Chạy backend:
+```bash
+bash ./mac-linux/run.sh
+```
+
+Mở thêm một Client:
+```bash
+bash ./mac-linux/client.sh
+```
+
+Khi muốn dừng toàn bộ hệ thống:
+```bash
+bash ./mac-linux/stop.sh
+```
+
+Lưu ý:
+- Script tự động ưu tiên `docker compose`, nếu máy bạn chỉ có bản cũ thì sẽ tự fallback sang `docker-compose`.
+- `run` chỉ khởi động backend. `client` là launcher riêng và có thể gọi nhiều lần để mở nhiều client song song.
+- `client` sẽ tự build JAR nếu file chưa tồn tại.
+- Nếu bạn vừa sửa code client, hãy build lại một lần bằng `mvn -q -pl client-module -am package -DskipTests` trước khi mở các client mới để chắc chắn dùng bản cập nhật.
+
+#### Linux chạy Server bằng Docker
+Nếu bạn muốn chạy backend trực tiếp bằng Docker trên Linux, dùng `docker compose` trong thư mục gốc của dự án:
+
+Khởi động MySQL + Server:
+```bash
+docker compose up -d --build server
+```
+
+Nếu máy bạn chỉ có bản Docker Compose cũ:
+```bash
+docker-compose up -d --build server
+```
+
+Kiểm tra trạng thái dịch vụ:
+```bash
+docker compose ps
+```
+
+Xem log của Server:
+```bash
+docker compose logs -f server
+```
+
+Dừng toàn bộ hệ thống:
+```bash
+docker compose down
+```
+
+Lưu ý:
+- Service `server` có `depends_on` nên Docker sẽ tự khởi động cả `db` trước khi chạy Server.
+- MySQL được map ra host tại cổng `3307`, còn Server chạy ở `localhost:8080`.
+- Nếu bạn muốn build lại image sau khi sửa code, hãy chạy lại lệnh `docker compose up -d --build server`.
 
 ### Cách 2: Chạy thủ công (Dành cho Developer)
 Sử dụng cách này để có thể Debug mã nguồn trực tiếp trên máy host. Server và Client sẽ được chạy thủ công thông qua Maven.
@@ -99,14 +165,21 @@ Mở Terminal mới, vào thư mục `server-module` và chạy:
 cd server-module
 java -jar target/server-1.0-SNAPSHOT.jar
 ```
-*(Hoặc chạy Class `com.group15.daugia.server.Main` trực tiếp trên IDE).*
+*(Hoặc chạy Class `com.group15.daugia.server.Main` trực tiếp trên IDE).* 
 
 **Bước 4: Khởi động Client**
-Mở Terminal mới, vào thư mục `client-module` và chạy:
+Mở Terminal mới, vào thư mục `client-module` và chạy một lần cho mỗi client:
 ```bash
 cd client-module
 mvn exec:java
 ```
+
+Nếu muốn build lại trước khi chạy:
+```bash
+mvn compile exec:java
+```
+
+Bạn có thể mở nhiều Terminal và chạy lại lệnh trên nhiều lần để có nhiều client cùng lúc. Nếu muốn dùng script, chạy `window\client.bat` hoặc `mac-linux/client.sh` nhiều lần.
 
 ## 6. Danh sách các chức năng đã hoàn thành
 ### 6.1. Nhóm chức năng nâng cao
