@@ -26,6 +26,39 @@ public class AuctionDao {
     return instance;
   }
 
+  private String normalizeStatus(String status, String startTime, String endTime) {
+    if (status == null || status.isBlank()) {
+      return status;
+    }
+    if ("CANCELLED".equalsIgnoreCase(status)) {
+      return "CANCELLED";
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime parsedEnd = parseDateTime(endTime);
+    if (parsedEnd != null && !now.isBefore(parsedEnd)) {
+      return "ENDED";
+    }
+
+    LocalDateTime parsedStart = parseDateTime(startTime);
+    if (parsedStart != null && !now.isBefore(parsedStart)) {
+      return "ACTIVE";
+    }
+
+    return "SCHEDULED";
+  }
+
+  private LocalDateTime parseDateTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return LocalDateTime.parse(value, FMT);
+    } catch (Exception ignored) {
+      return null;
+    }
+  }
+
   // -----------------------------------------------------------------------
   // createAuction
   // -----------------------------------------------------------------------
@@ -181,7 +214,7 @@ public class AuctionDao {
   private boolean placeBidOptimisticWithRetry(
       int auctionId, String bidderUsername, double bidAmount, int expectedVersion) {
     String sqlCheck =
-        "SELECT status, end_time, cur_price, cur_leader, version FROM auctions WHERE id = ?";
+        "SELECT status, start_time, end_time, cur_price, cur_leader, version FROM auctions WHERE id = ?";
     String sqlUpdate =
         "UPDATE auctions SET cur_price = ?, cur_leader = ?, "
             + "version = version + 1 WHERE id = ? AND version = ?";
@@ -199,14 +232,14 @@ public class AuctionDao {
             try (ResultSet rs = psCheck.executeQuery()) {
               if (!rs.next()) { conn.rollback(); return false; }
               String status = rs.getString("status");
+              String startTime = rs.getString("start_time");
               String endTime = rs.getString("end_time");
               double curPrice = rs.getDouble("cur_price");
               version = rs.getInt("version");
               prevLeader = rs.getString("cur_leader");
 
-              LocalDateTime end = LocalDateTime.parse(endTime, FMT);
-              if (!"ACTIVE".equals(status) || LocalDateTime.now().isAfter(end)
-                  || bidAmount <= curPrice) {
+              String normalizedStatus = normalizeStatus(status, startTime, endTime);
+              if (!"ACTIVE".equals(normalizedStatus) || bidAmount <= curPrice) {
                 conn.rollback(); return false;
               }
               if (attempt == 1 && version != expectedVersion) { conn.rollback(); continue; }
@@ -258,7 +291,7 @@ public class AuctionDao {
 
   private AutoBidResult placeBidPessimistic(int auctionId, String bidderUsername, double bidAmount) {
     String sqlCheck =
-        "SELECT status, end_time, cur_price, cur_leader FROM auctions WHERE id = ? FOR UPDATE";
+        "SELECT status, start_time, end_time, cur_price, cur_leader FROM auctions WHERE id = ? FOR UPDATE";
     String sqlUpdate =
         "UPDATE auctions SET cur_price = ?, cur_leader = ?, version = version + 1 WHERE id = ?";
     String sqlBid =
@@ -273,13 +306,13 @@ public class AuctionDao {
           try (ResultSet rs = psCheck.executeQuery()) {
             if (!rs.next()) { conn.rollback(); return null; }
             String status = rs.getString("status");
+            String startTime = rs.getString("start_time");
             String endTime = rs.getString("end_time");
             double curPrice = rs.getDouble("cur_price");
             prevLeader = rs.getString("cur_leader");
 
-            LocalDateTime end = LocalDateTime.parse(endTime, FMT);
-            if (!"ACTIVE".equals(status) || LocalDateTime.now().isAfter(end)
-                || bidAmount <= curPrice) {
+            String normalizedStatus = normalizeStatus(status, startTime, endTime);
+            if (!"ACTIVE".equals(normalizedStatus) || bidAmount <= curPrice) {
               conn.rollback(); return null;
             }
           }
@@ -328,12 +361,16 @@ public class AuctionDao {
       int auctionId, LocalDateTime newEndTime, int expectedVersion) {
     String sql =
         "UPDATE auctions SET end_time = ?, version = version + 1 "
-            + "WHERE id = ? AND version = ? AND status = 'ACTIVE'";
+            + "WHERE id = ? AND version = ? AND status IN ('SCHEDULED','ACTIVE') "
+            + "AND start_time <= ? AND end_time > ?";
     try (Connection conn = getConn();
         PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, newEndTime.format(FMT));
       ps.setInt(2, auctionId);
       ps.setInt(3, expectedVersion);
+      String now = LocalDateTime.now().format(FMT);
+      ps.setString(4, now);
+      ps.setString(5, now);
       return ps.executeUpdate() == 1;
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -464,7 +501,7 @@ public class AuctionDao {
   // -----------------------------------------------------------------------
   public String cancelAuction(int auctionId, String requesterUsername, boolean isAdmin) {
     String sqlCheck =
-        "SELECT a.status, i.seller_username FROM auctions a "
+        "SELECT a.status, a.start_time, a.end_time, i.seller_username FROM auctions a "
             + "JOIN items i ON i.id = a.item_id WHERE a.id = ? FOR UPDATE";
     String sqlCancel =
         "UPDATE auctions SET status = 'CANCELLED', version = version + 1 WHERE id = ?";
@@ -479,13 +516,17 @@ public class AuctionDao {
           try (ResultSet rs = ps.executeQuery()) {
             if (!rs.next()) { conn.rollback(); return "NOT_FOUND"; }
             status = rs.getString("status");
+            String startTime = rs.getString("start_time");
+            String endTime = rs.getString("end_time");
             seller = rs.getString("seller_username");
+
+            String normalizedStatus = normalizeStatus(status, startTime, endTime);
+            if ("ENDED".equals(normalizedStatus) || "CANCELLED".equals(normalizedStatus)) {
+              conn.rollback(); return "ALREADY_ENDED";
+            }
           }
         }
 
-        if ("ENDED".equals(status) || "CANCELLED".equals(status)) {
-          conn.rollback(); return "ALREADY_ENDED";
-        }
         if (!isAdmin && !requesterUsername.equals(seller)) {
           conn.rollback(); return "FORBIDDEN";
         }
@@ -627,20 +668,23 @@ public class AuctionDao {
     a.setEndTime(rs.getString("end_time"));
     a.setVersion(rs.getInt("version"));
 
+    String normalizedStatus = normalizeStatus(a.getStatus(), a.getStartTime(), a.getEndTime());
+    a.setStatus(normalizedStatus);
+
     LocalDateTime now = LocalDateTime.now();
-    if ("ACTIVE".equals(a.getStatus()) && a.getEndTime() != null) {
-      try {
-        LocalDateTime end = LocalDateTime.parse(a.getEndTime(), FMT);
+    if ("ACTIVE".equals(normalizedStatus) && a.getEndTime() != null) {
+      LocalDateTime end = parseDateTime(a.getEndTime());
+      if (end != null) {
         long secs = java.time.Duration.between(now, end).getSeconds();
         a.setSecondsRemaining(Math.max(0, secs));
-      } catch (Exception ignored) {}
+      }
     }
-    if ("SCHEDULED".equals(a.getStatus()) && a.getStartTime() != null) {
-      try {
-        LocalDateTime start = LocalDateTime.parse(a.getStartTime(), FMT);
+    if ("SCHEDULED".equals(normalizedStatus) && a.getStartTime() != null) {
+      LocalDateTime start = parseDateTime(a.getStartTime());
+      if (start != null) {
         long secs = java.time.Duration.between(now, start).getSeconds();
         a.setSecondsToStart(Math.max(0, secs));
-      } catch (Exception ignored) {}
+      }
     }
     return a;
   }
@@ -788,7 +832,8 @@ public class AuctionDao {
       return "INVALID_INPUT";
     }
 
-    String checkSql = "SELECT status, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
+    String checkSql =
+        "SELECT status, start_time, end_time, cur_price FROM auctions WHERE id = ? FOR UPDATE";
     String upsertSql =
         "INSERT INTO auction_auto_bids (auction_id, bidder_username, max_amount, bid_step, active) "
             + "VALUES (?, ?, ?, ?, true) "
@@ -802,8 +847,9 @@ public class AuctionDao {
           ps.setInt(1, auctionId);
           try (ResultSet rs = ps.executeQuery()) {
             if (!rs.next()) { conn.rollback(); return "AUCTION_NOT_FOUND"; }
-            LocalDateTime end = LocalDateTime.parse(rs.getString("end_time"), FMT);
-            if (!"ACTIVE".equals(rs.getString("status")) || LocalDateTime.now().isAfter(end)) {
+            String normalizedStatus = normalizeStatus(
+                rs.getString("status"), rs.getString("start_time"), rs.getString("end_time"));
+            if (!"ACTIVE".equals(normalizedStatus)) {
               conn.rollback(); return "AUCTION_NOT_ACTIVE";
             }
             curPrice = rs.getDouble("cur_price");
@@ -886,7 +932,8 @@ public class AuctionDao {
               new com.group15.daugia.shared.JSON.JSONMyAuctionHistoryTemp.AuctionHistoryRecord();
           rec.setAuctionId(rs.getInt("id"));
           rec.setTitle(rs.getString("title"));
-          rec.setStatus(rs.getString("status"));
+          rec.setStatus(
+              normalizeStatus(rs.getString("status"), rs.getString("start_time"), rs.getString("end_time")));
           rec.setCurPrice(rs.getDouble("cur_price"));
           rec.setCurLeader(rs.getString("cur_leader"));
           rec.setMyTopBid(rs.getDouble("my_top_bid"));

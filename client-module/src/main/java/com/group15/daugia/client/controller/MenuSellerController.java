@@ -12,6 +12,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -20,6 +21,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import com.group15.daugia.client.util.SceneChanger;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -170,14 +172,22 @@ public class MenuSellerController implements Initializable {
 
             List<BaseItem> items = new ArrayList<>();
             for (JSONItemTemp item : answer.getItemList()) {
-                items.add(
-                        new BaseItem(
-                                String.valueOf(item.getId()),
-                                item.getName(),
-                                item.getPrice(),
-                                item.getDesc(),
-                                item.getStartTime(),
-                                item.getEndTime()));
+                BaseItem base = new BaseItem(
+                        String.valueOf(item.getId()),
+                        item.getName(),
+                        item.getPrice(),
+                        item.getDesc(),
+                        item.getStartTime(),
+                        item.getEndTime());
+                base.setAuctionId(item.getAuctionId());
+                base.setSeller(item.getSellerUsername());
+                base.setCurPrice(item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice());
+                long displaySeconds = "SCHEDULED".equalsIgnoreCase(item.getStatus())
+                        ? item.getSecondsToStart()
+                        : item.getSecondsRemaining();
+                base.setSecondsRemaining(displaySeconds);
+                base.setStatus(item.getStatus());
+                items.add(base);
             }
 
             lblSubtitle.setText(items.size() + " sản phẩm của bạn");
@@ -229,7 +239,12 @@ public class MenuSellerController implements Initializable {
         Label lblPriceKey = new Label("Giá sàn");
         lblPriceKey.getStyleClass().add("product-card-price-label");
 
-        Label lblPriceVal = new Label(vnd.format((long) item.getPrice()) + " ₫");
+        boolean hasAuction = item.getAuctionId() > 0;
+        String priceLabel = hasAuction ? "Giá hiện tại" : "Giá sàn";
+        double displayPrice = item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice();
+        lblPriceKey.setText(priceLabel);
+
+        Label lblPriceVal = new Label(vnd.format((long) displayPrice) + " ₫");
         lblPriceVal.getStyleClass().add("product-card-price-value");
 
         Label lblTimeKey = new Label("Thời gian");
@@ -239,6 +254,18 @@ public class MenuSellerController implements Initializable {
         lblTimeVal.getStyleClass().add("product-card-time-value");
         lblTimeVal.setWrapText(true);
 
+        Label lblStatus = new Label(statusDisplayText(item.getStatus()));
+        lblStatus.getStyleClass().add("seller-panel-subtitle");
+
+        Button btnViewAuction = new Button("Xem phiên");
+        btnViewAuction.getStyleClass().add("menu-button-secondary");
+        btnViewAuction.setMaxWidth(Double.MAX_VALUE);
+        btnViewAuction.setDisable(!hasAuction);
+        btnViewAuction.setOnAction(e -> {
+            e.consume();
+            openAuctionDetail(item);
+        });
+
         card.getChildren().addAll(
                 headerRow,
                 lblDesc,
@@ -246,10 +273,24 @@ public class MenuSellerController implements Initializable {
                 lblPriceKey,
                 lblPriceVal,
                 lblTimeKey,
-                lblTimeVal);
+                lblTimeVal,
+                lblStatus,
+                btnViewAuction);
 
         card.setOnMouseClicked(e -> selectItem(item));
         return card;
+    }
+
+    private void openAuctionDetail(BaseItem item) {
+        if (item.getAuctionId() <= 0) {
+            showAlert(Alert.AlertType.INFORMATION, "Chưa có phiên đấu giá", "Sản phẩm này chưa có phiên đấu giá để xem.");
+            return;
+        }
+
+        BiddingController controller = SceneChanger.changeTo("com.group15.daugia.clientResources/bidding.fxml");
+        if (controller != null) {
+            controller.setSellerAuction(item.getAuctionId(), item.getName(), item.getSeller());
+        }
     }
 
     private void selectItem(BaseItem item) {
@@ -480,6 +521,19 @@ public class MenuSellerController implements Initializable {
         String start = startTime == null || startTime.isBlank() ? "—" : startTime;
         String end = endTime == null || endTime.isBlank() ? "—" : endTime;
         return start + " → " + end;
+    }
+
+    private String statusDisplayText(String status) {
+        if (status == null || status.isBlank()) {
+            return "Chưa có phiên đấu giá";
+        }
+        return switch (status.toUpperCase(Locale.ROOT)) {
+            case "SCHEDULED" -> "Sắp diễn ra";
+            case "ACTIVE" -> "Đang đấu giá";
+            case "ENDED" -> "Đã kết thúc";
+            case "CANCELLED" -> "Đã hủy";
+            default -> status;
+        };
     }
 
     private String safeText(String value) {

@@ -2,6 +2,7 @@ package com.group15.daugia.shared.JSON;
 
 public class JSONItemTemp extends JSONTemp {
   private int id;
+  private int auctionId;
   private String name;
   private double price;
   private double curPrice;
@@ -25,6 +26,14 @@ public class JSONItemTemp extends JSONTemp {
 
   public void setId(int id) {
     this.id = id;
+  }
+
+  public int getAuctionId() {
+    return auctionId;
+  }
+
+  public void setAuctionId(int auctionId) {
+    this.auctionId = auctionId;
   }
 
   public String getName() {
