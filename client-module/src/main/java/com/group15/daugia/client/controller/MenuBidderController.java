@@ -166,7 +166,7 @@ public class MenuBidderController implements Initializable {
                         item.getDesc(),
                         item.getStartTime(),
                         item.getEndTime());
-                base.setAuctionId(item.getId()); // auctionId = itemId theo cấu trúc hiện tại
+                base.setAuctionId(item.getAuctionId() > 0 ? item.getAuctionId() : item.getId());
                 base.setSeller(item.getSellerUsername());
                 base.setCurPrice(item.getCurPrice() > 0 ? item.getCurPrice() : item.getPrice());
                 long displaySeconds = "SCHEDULED".equalsIgnoreCase(item.getStatus())

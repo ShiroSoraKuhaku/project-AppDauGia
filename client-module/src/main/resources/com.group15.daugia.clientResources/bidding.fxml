@@ -63,7 +63,7 @@
     </VBox>
 
     <!-- ===== ACTION PANEL ===== -->
-    <VBox styleClass="bidding-action-panel" spacing="10">
+    <VBox fx:id="actionPanel" styleClass="bidding-action-panel" spacing="10">
         <!-- Hàng đặt giá thủ công -->
         <HBox spacing="10" alignment="CENTER_LEFT">
             <Label text="Giá của bạn:" styleClass="bidding-info-key"/>

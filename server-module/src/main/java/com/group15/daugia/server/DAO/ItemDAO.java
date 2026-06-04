@@ -18,6 +18,39 @@ public class ItemDAO {
     return instance;
   }
 
+  private String normalizeStatus(String status, String startTime, String endTime) {
+    if (status == null || status.isBlank()) {
+      return status;
+    }
+    if ("CANCELLED".equalsIgnoreCase(status)) {
+      return "CANCELLED";
+    }
+
+    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+    java.time.LocalDateTime parsedEnd = parseDateTime(endTime);
+    if (parsedEnd != null && !now.isBefore(parsedEnd)) {
+      return "ENDED";
+    }
+
+    java.time.LocalDateTime parsedStart = parseDateTime(startTime);
+    if (parsedStart != null && !now.isBefore(parsedStart)) {
+      return "ACTIVE";
+    }
+
+    return "SCHEDULED";
+  }
+
+  private java.time.LocalDateTime parseDateTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    } catch (Exception ignored) {
+      return null;
+    }
+  }
+
   public int addItem(String sellerUsername, String name, double price, String desc) {
     String sql = "insert into items (seller_username, name, price, `desc`) values (?, ?, ?, ?)";
 
@@ -133,7 +166,7 @@ public class ItemDAO {
   public List<JSONItemTemp> getAllItems() {
     String sql =
         "select i.id, i.seller_username, i.name, i.price, i.`desc`, "
-            + "a.start_time, a.end_time, a.status, a.cur_price "
+            + "a.id as auction_id, a.start_time, a.end_time, a.status, a.cur_price "
             + "from items i left join auctions a on a.item_id = i.id order by i.id desc";
     List<JSONItemTemp> items = new ArrayList<>();
 
@@ -146,32 +179,32 @@ public class ItemDAO {
       while (resultSet.next()) {
         JSONItemTemp item = new JSONItemTemp();
         item.setId(resultSet.getInt("id"));
+        item.setAuctionId(resultSet.getInt("auction_id"));
         item.setSellerUsername(resultSet.getString("seller_username"));
         item.setName(resultSet.getString("name"));
         item.setPrice(resultSet.getDouble("price"));
         item.setDesc(resultSet.getString("desc"));
         item.setStartTime(resultSet.getString("start_time"));
         item.setEndTime(resultSet.getString("end_time"));
-        String status = resultSet.getString("status");
+        String status = normalizeStatus(
+            resultSet.getString("status"), item.getStartTime(), item.getEndTime());
         item.setStatus(status);
         item.setCurPrice(resultSet.getDouble("cur_price"));
 
-        java.time.format.DateTimeFormatter fmt =
-            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
 
         if ("ACTIVE".equals(status) && item.getEndTime() != null) {
-          try {
-            java.time.LocalDateTime end = java.time.LocalDateTime.parse(item.getEndTime(), fmt);
+          java.time.LocalDateTime end = parseDateTime(item.getEndTime());
+          if (end != null) {
             long secs = java.time.Duration.between(now, end).getSeconds();
             item.setSecondsRemaining(Math.max(0, secs));
-          } catch (Exception ignored) {}
+          }
         } else if ("SCHEDULED".equals(status) && item.getStartTime() != null) {
-          try {
-            java.time.LocalDateTime start = java.time.LocalDateTime.parse(item.getStartTime(), fmt);
+          java.time.LocalDateTime start = parseDateTime(item.getStartTime());
+          if (start != null) {
             long secs = java.time.Duration.between(now, start).getSeconds();
             item.setSecondsToStart(Math.max(0, secs));
-          } catch (Exception ignored) {}
+          }
         }
         items.add(item);
       }
@@ -189,7 +222,7 @@ public class ItemDAO {
     boolean hasFilter = nameFilter != null && !nameFilter.isBlank();
     String sql =
         "select i.id, i.seller_username, a.title, i.price, i.`desc`, "
-            + "a.start_time, a.end_time, a.status, a.cur_price "
+            + "a.id as auction_id, a.start_time, a.end_time, a.status, a.cur_price "
             + "from items i join auctions a on a.item_id = i.id "
             + "where a.status IN ('SCHEDULED','ACTIVE') "
             + "and i.seller_username <> ? "
@@ -216,28 +249,34 @@ public class ItemDAO {
         while (resultSet.next()) {
           JSONItemTemp item = new JSONItemTemp();
           item.setId(resultSet.getInt("id"));
+          item.setAuctionId(resultSet.getInt("auction_id"));
           item.setSellerUsername(resultSet.getString("seller_username"));
           item.setName(resultSet.getString("title"));
           item.setPrice(resultSet.getDouble("price"));
           item.setDesc(resultSet.getString("desc"));
           item.setStartTime(resultSet.getString("start_time"));
           item.setEndTime(resultSet.getString("end_time"));
-          String status = resultSet.getString("status");
+          String status = normalizeStatus(
+              resultSet.getString("status"), item.getStartTime(), item.getEndTime());
           item.setStatus(status);
           item.setCurPrice(resultSet.getDouble("cur_price"));
 
+          if ("ENDED".equals(status) || "CANCELLED".equals(status)) {
+            continue;
+          }
+
           if ("ACTIVE".equals(status) && item.getEndTime() != null) {
-            try {
-              java.time.LocalDateTime end = java.time.LocalDateTime.parse(item.getEndTime(), fmt);
+            java.time.LocalDateTime end = parseDateTime(item.getEndTime());
+            if (end != null) {
               long secs = java.time.Duration.between(now, end).getSeconds();
               item.setSecondsRemaining(Math.max(0, secs));
-            } catch (Exception ignored) {}
+            }
           } else if ("SCHEDULED".equals(status) && item.getStartTime() != null) {
-            try {
-              java.time.LocalDateTime start = java.time.LocalDateTime.parse(item.getStartTime(), fmt);
+            java.time.LocalDateTime start = parseDateTime(item.getStartTime());
+            if (start != null) {
               long secs = java.time.Duration.between(now, start).getSeconds();
               item.setSecondsToStart(Math.max(0, secs));
-            } catch (Exception ignored) {}
+            }
           }
           items.add(item);
         }
@@ -250,10 +289,14 @@ public class ItemDAO {
 
   public List<JSONItemTemp> getItemsBySeller(String sellerUsername) {
     String sql =
-        "select i.id, i.seller_username, i.name, i.price, i.`desc`, a.start_time, a.end_time "
+        "select i.id, i.seller_username, i.name, i.price, i.`desc`, "
+            + "a.id as auction_id, a.start_time, a.end_time, a.status, a.cur_price "
             + "from items i left join auctions a on a.item_id = i.id "
             + "where i.seller_username = ? order by i.id desc";
     List<JSONItemTemp> items = new ArrayList<>();
+    java.time.format.DateTimeFormatter fmt =
+        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    java.time.LocalDateTime now = java.time.LocalDateTime.now();
 
     DBProperty dbProperty = DBProperty.getInstance();
     try (Connection conn =
@@ -267,12 +310,31 @@ public class ItemDAO {
         while (resultSet.next()) {
           JSONItemTemp item = new JSONItemTemp();
           item.setId(resultSet.getInt("id"));
+          item.setAuctionId(resultSet.getInt("auction_id"));
           item.setSellerUsername(resultSet.getString("seller_username"));
           item.setName(resultSet.getString("name"));
           item.setPrice(resultSet.getDouble("price"));
           item.setDesc(resultSet.getString("desc"));
           item.setStartTime(resultSet.getString("start_time"));
           item.setEndTime(resultSet.getString("end_time"));
+          String status = normalizeStatus(
+              resultSet.getString("status"), item.getStartTime(), item.getEndTime());
+          item.setStatus(status);
+          item.setCurPrice(resultSet.getDouble("cur_price"));
+
+          if ("ACTIVE".equals(status) && item.getEndTime() != null) {
+            java.time.LocalDateTime end = parseDateTime(item.getEndTime());
+            if (end != null) {
+              long secs = java.time.Duration.between(now, end).getSeconds();
+              item.setSecondsRemaining(Math.max(0, secs));
+            }
+          } else if ("SCHEDULED".equals(status) && item.getStartTime() != null) {
+            java.time.LocalDateTime start = parseDateTime(item.getStartTime());
+            if (start != null) {
+              long secs = java.time.Duration.between(now, start).getSeconds();
+              item.setSecondsToStart(Math.max(0, secs));
+            }
+          }
           items.add(item);
         }
       }

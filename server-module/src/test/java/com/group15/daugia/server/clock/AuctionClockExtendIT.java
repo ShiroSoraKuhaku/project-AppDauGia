@@ -7,6 +7,9 @@ import org.junit.jupiter.api.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,6 +69,25 @@ public class AuctionClockExtendIT extends BaseTest {
 
     @Test
     @Order(3)
+    void bidAtThirtySecondsExtendsByThirtySeconds() throws Exception {
+        int boundaryItem = seedItem("extuser1", "Boundary Item", 100.0);
+        int boundaryAuction = seedActiveAuction("Boundary Auction", boundaryItem, 100.0, 30);
+
+        LocalDateTime endBefore = LocalDateTime.parse(getEndTime(boundaryAuction), DATE_FMT);
+
+        sendCommand("PLACE-BID",
+                "{\"token\":\"extok2\",\"auctionId\":" + boundaryAuction + ",\"bidAmount\":200.0}");
+        Thread.sleep(500);
+
+        LocalDateTime endAfter = LocalDateTime.parse(getEndTime(boundaryAuction), DATE_FMT);
+        long deltaSeconds = Duration.between(endBefore, endAfter).getSeconds();
+
+        assertEquals(30L, deltaSeconds,
+                "When the auction is within 30 seconds, the end time should extend by exactly 30 seconds");
+    }
+
+    @Test
+    @Order(4)
     void extendedAuctionNotEndedEarly() throws Exception {
         // Bid near end -> extend -> auction còn thêm 30s, không nên ENDED ngay
         sendCommand("PLACE-BID",
@@ -98,4 +120,7 @@ public class AuctionClockExtendIT extends BaseTest {
             }
         }
     }
+
+    private static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 }

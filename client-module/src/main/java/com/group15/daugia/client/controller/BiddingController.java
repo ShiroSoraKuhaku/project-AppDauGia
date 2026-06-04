@@ -23,6 +23,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
 import java.text.NumberFormat;
@@ -60,6 +61,7 @@ public class BiddingController implements Initializable {
   @FXML private Button btnPlaceBid;
   @FXML private Button btnAutoBid;
 
+  @FXML private VBox actionPanel;
   @FXML private HBox autoBidPanel;
   @FXML private TextField txtMaxAmount;
   @FXML private TextField txtBidStep;
@@ -79,6 +81,8 @@ public class BiddingController implements Initializable {
   private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
   private String currentStatus;
   private boolean countingToStart = false;
+  private boolean sellerView = false;
+  private String backTarget = "com.group15.daugia.clientResources/dashboard.fxml";
 
   @Override
   public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -91,6 +95,33 @@ public class BiddingController implements Initializable {
     loadAuctionState();
     loadBidHistory();
     startWatching();
+  }
+
+  public void setSellerAuction(int auctionId, String itemName, String sellerName) {
+    sellerView = true;
+    backTarget = "com.group15.daugia.clientResources/dashboard.fxml";
+    applySellerView();
+    if (sellerName != null && !sellerName.isBlank()) {
+      lblSeller.setText(sellerName);
+    }
+    setAuction(auctionId, itemName);
+  }
+
+  private void applySellerView() {
+    if (actionPanel != null) {
+      actionPanel.setVisible(false);
+      actionPanel.setManaged(false);
+    }
+    disableAutoBid();
+    if (txtBidAmount != null) {
+      txtBidAmount.setDisable(true);
+    }
+    if (btnPlaceBid != null) {
+      btnPlaceBid.setDisable(true);
+    }
+    if (btnAutoBid != null) {
+      btnAutoBid.setDisable(true);
+    }
   }
 
   private void initChart() {
@@ -317,6 +348,11 @@ public class BiddingController implements Initializable {
 
   @FXML
   private void handlePlaceBid() {
+    if (sellerView) {
+      showAlert(Alert.AlertType.WARNING, "Chỉ xem", "Người bán chỉ có thể xem chi tiết phiên đấu giá.");
+      return;
+    }
+
     String input = txtBidAmount.getText().trim();
     if (input.isEmpty()) {
       showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng nhập số tiền muốn đặt.");
@@ -360,6 +396,10 @@ public class BiddingController implements Initializable {
 
   @FXML
   private void handleToggleAutoBid() {
+    if (sellerView) {
+      return;
+    }
+
     if (!autoBidEnabled) {
       autoBidPanel.setVisible(true);
       autoBidPanel.setManaged(true);
@@ -444,7 +484,7 @@ public class BiddingController implements Initializable {
     if (auctionId >= 0) {
       watchNetwork.stopWatch(auctionId, SessionManager.getToken());
     }
-    SceneChanger.changeTo("com.group15.daugia.clientResources/dashboard.fxml");
+    SceneChanger.changeTo(backTarget);
   }
 
   private void disableAutoBid() {
