@@ -170,6 +170,9 @@ public class AuctionClock {
   public void tryExtend(int auctionId) {
     JSONAuctionTemp snap = dao.getAuctionSnapshot(auctionId);
     if (snap == null || !"ACTIVE".equals(snap.getStatus())) return;
+    // Chỉ gia hạn khi auction này đã có job end được scheduler đăng ký.
+    // Tránh kéo dài các auction được seed trực tiếp trong DB trước khi bootstrap.
+    if (!endJobs.containsKey(auctionId)) return;
 
     long secsLeft = snap.getSecondsRemaining();
     if (secsLeft > EXTEND_THRESHOLD_SECS) return; // không cần gia hạn
